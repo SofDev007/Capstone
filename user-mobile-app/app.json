@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Bus Tracker User",
+    "slug": "bus-tracker-user",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.transport.usertracker"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5967c1b8-b87d-4f6f-ad7f-ae2e57008dac"
+      }
+    },
+    "owner": "nitin1222",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5967c1b8-b87d-4f6f-ad7f-ae2e57008dac"
+    },
+    "ios": {}
+  }
+}
