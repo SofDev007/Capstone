@@ -20,7 +20,7 @@ npx eas-cli@latest build --profile development --platform android
 
 For a quick look without a phone: `npx expo start --web` (tracking features are limited on web).
 
-Demo accounts (with `npm run demo` in `../backend`): `demo.driver1@transit.local` … `demo.driver4@transit.local`, password `Demo@1234`.
+Demo accounts (with `npm run demo` in `../backend`): `demo.driver1@transit.local` … `demo.driver12@transit.local` (Indore), password `Demo@1234`.
 
 ## How it works
 

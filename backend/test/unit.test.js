@@ -147,3 +147,18 @@ test('planner: short trips also offer walking', () => {
   const options = planWithGraph(graph, { from: { lat: 30, lng: 76.0 }, to: { lat: 30, lng: 76.0104 }, waitFor: fixedWait(30) });
   assert.ok(options[0].walkOnly, 'walking 1 km beats waiting 30 min');
 });
+
+test('Indore demo data is consistent', async () => {
+  const { readFileSync } = await import('node:fs');
+  const city = JSON.parse(readFileSync(new URL('../data/indore.json', import.meta.url)));
+  assert.equal(city.routes.length, 12);
+  for (const r of city.routes) {
+    for (const s of r.stops) assert.ok(city.stops[s], `route ${r.number}: unknown stop ${s}`);
+    assert.equal(r.offsets.length, r.stops.length);
+    assert.ok(r.offsets.every((m, i) => i === 0 ? m === 0 : m >= r.offsets[i - 1]), `route ${r.number}: offsets go backwards`);
+  }
+  const plates = city.buses.map((b) => b.plateNumber);
+  assert.ok(plates.every((p) => /^MP09TR\d{4}$/.test(p)));
+  assert.equal(new Set(plates).size, plates.length);
+  for (const [, lat, lng] of Object.values(city.stops)) assert.ok(lat > 22.55 && lat < 22.85 && lng > 75.7 && lng < 76.02, 'stop outside Indore');
+});
