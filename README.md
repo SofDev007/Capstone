@@ -81,7 +81,7 @@ cd backend && npm test    # unit (geo, Dijkstra, warnings, schedule), e2e with i
 
 ## Security notes
 
-- No default admin; admins are created with `backend/create-admin.js`.
+- No default admin; admins are created with `backend/create-admin.js`..
 - Logins are rate-limited; deactivated or unapproved drivers are rejected immediately.
 - Panic/incident and application events go only to an authenticated admin socket room.
 - Driver documents are never publicly reachable; admins view them through an authenticated endpoint.
