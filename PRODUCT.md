@@ -26,8 +26,8 @@ Unlike map apps that show schedules, this system is fed directly by the drivers'
 
 ## Operating Context
 
-- Demo/pilot city in the seed data: Chandigarh tricity (Chandigarh, Mohali, Zirakpur); designed to work anywhere in India.
-- Route numbers + named stops (e.g. "Route 1 — ISBT 43 → Sukhna Lake"); timetables are departure times ("06:00").
+- Demo/pilot city in the seed data: Indore (12 city routes); designed to work anywhere in India.
+- Route numbers + named stops (e.g. "Route 1 — Mhow Naka → CAT"); timetables are departure times ("08:15").
 - Drivers use Android phones primarily; passengers use cheap-to-mid Android phones and browsers; connectivity is intermittent.
 - Languages: English plus Indian languages (Hindi, Punjabi, Bengali, Marathi, Tamil, Telugu, Gujarati, Kannada, Malayalam, Odia) — every surface used by passengers/drivers must work in Indic scripts.
 - India's emergency number is 112.
