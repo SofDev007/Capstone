@@ -105,7 +105,7 @@ const CSS = `
 .ng-me::before{content:'';position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:rgba(62,230,255,.15);animation:ng-me 2s ease-out infinite}
 @keyframes ng-me{from{transform:scale(.6);opacity:1}to{transform:scale(1.8);opacity:0}}
 .ng-pin{font:700 12px 'Anek Latin',system-ui,sans-serif;color:#04060C;padding:3px 8px;border-radius:8px;transform:translateY(-4px);box-shadow:0 0 14px currentColor}
-.maplibregl-ctrl-attrib.maplibregl-compact{background:rgba(22,30,52,.7)!important;color:#8B97B8}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-attrib-inner{background:rgba(22,30,52,.75)!important;color:#8B97B8}
 .maplibregl-ctrl-attrib a{color:#9AA6C7!important}
 @media (prefers-reduced-motion: reduce){.ng-bus .ng-ring,.ng-me::before{animation:none;display:none}}
 .ng-still .ng-bus .ng-ring,.ng-still .ng-me::before{display:none}

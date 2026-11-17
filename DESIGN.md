@@ -287,6 +287,7 @@ The light theme stays Ticket Stock, because passengers use the app in direct sun
 |---|---|
 | bg.deep / bg.map / bg.raised | `#04060C` / `#0A0F1C` / `#0E1424` |
 | glass.fill / fillSolid | `rgba(22,30,52,.55)` / `rgba(22,30,52,.88)` (no-blur fallback) |
+| glass.fillMap / fillMapWeb | `rgba(22,30,52,.92)` native panels over the map · `.72` web panels over the map (contrast, see below) |
 | glass.border / highlight | `rgba(255,255,255,.13)` / `inset 0 1px 0 rgba(255,255,255,.08)` |
 | glass.shadow / blur / saturate | `0 20px 40px -18px rgba(0,0,0,.7)` / 18 px / 150% |
 | radius | panel 18 · card 16 · chip 12 · pill 999 |
@@ -317,6 +318,15 @@ The light theme stays Ticket Stock, because passengers use the app in direct sun
 ## Blur over the map
 
 Both apps draw the map in an Expo DOM component, which is a WebView on phones. On Android, `BlurView` blurs only what is inside a `BlurTargetView`, and a WebView's GPU surface is not captured reliably, so the result is blank or stale. **Panels that float over the map therefore use the solid fallback (`fillSolid`) on native** (`<Glass overMap>`). Real blur is used everywhere else. On web the map is in the same document, so CSS `backdrop-filter` works and was verified there. The native result has not been checked on a physical device yet. If blur over the map turns out to work, remove `overMap` from those panels.
+
+## Contrast (measured)
+
+The worst case is a lime route line (`#B6FF5C`) directly under a panel. At `.55`, an 18 px blur spreads the line to about 25% coverage. At that coverage muted text measures 4.59:1, which only just passes, and without the blur it would fail. Panels over the map therefore get a stronger tint:
+
+- **Web:** `.72` gives muted 4.98:1 after blur (`.over-map .glass`).
+- **Native:** `.92` gives muted 4.66:1 even with no blur at all (`<Glass overMap>`).
+
+Sheets and dialogs use the opaque raised surface: primary 16.1:1, secondary 7.6:1, muted 6.3:1. Dark text `#04060C` on every neon colour is ≥ 6.2:1, and 6.3:1 on alert red, which is why SOS labels are dark. White on alert red would be only 3.2:1.
 
 ## Do / Don't
 

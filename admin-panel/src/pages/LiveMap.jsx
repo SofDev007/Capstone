@@ -221,7 +221,7 @@ export default function LiveMap() {
   };
 
   return (
-    <div className="h-full relative">
+    <div className="h-full relative over-map">
       <MapView routes={mapRoutes} stops={mapStops} buses={mapBuses} trail={trail} onMap={(m) => { map.current = m; }}
         incidents={sos?.lngLat ? [{ id: sos.incident._id, lng: sos.lngLat[0], lat: sos.lngLat[1], title: incidentTitle(sos.incident) }] : []}
         fitKey={`${selectedId || ''}|${routeFilter || ''}|${Object.keys(routes).length}|${trail ? 't' : ''}`}

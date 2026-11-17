@@ -42,6 +42,10 @@
       background: theme('colors.glass.solid');
     }
   }
+  /* Panels floating over the neon map: stronger tint keeps muted text ≥ 4.5:1 (see DESIGN.md) */
+  .over-map .glass {
+    background: rgba(22, 30, 52, 0.72);
+  }
   /* Card inside a glass panel (never glass on glass) */
   .glass-card {
     background: rgba(255, 255, 255, 0.05);

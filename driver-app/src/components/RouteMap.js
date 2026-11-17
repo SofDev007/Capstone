@@ -5,7 +5,7 @@
 // (no flow dashes, no pulsing rings) — only the bus marker moves, and only when the bus does.
 import { useEffect, useRef, useState } from 'react';
 import { MAP_STYLE_URL, MAP_STYLE_DARK_URL, INDIA_VIEW, loadMapLibre } from 'transit-shared/mapConfig.js';
-import { applyNightGlassStyle, addNeonRouteLayers } from 'transit-shared/neonMap.js';
+import { applyNightGlassStyle, addNeonRouteLayers, injectNeonMapCss } from 'transit-shared/neonMap.js';
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
 let maplibregl; // set by loadMapLibre(); see mapConfig.js for why it isn't imported
@@ -49,6 +49,7 @@ export default function RouteMap({ path = [], stops = [], nextIndex = 0, positio
     loadMapLibre().then((lib) => {
       if (cancelled) return;
       maplibregl = lib;
+      if (night) injectNeonMapCss();
       create();
       setReady((n) => n + 1);
     }).catch((e) => console.warn(e.message)); // offline: the map stays a plain background

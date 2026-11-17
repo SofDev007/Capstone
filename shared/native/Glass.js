@@ -37,12 +37,12 @@ export default function Glass({ children, style, radius = glass.radius.panel, ov
 
   const base = [styles.glass, { borderRadius: radius }, style];
   if (!canBlurHere(target, overMap, reduceEffects)) {
-    return <View style={[base, { backgroundColor: tint || glass.fillSolid }]} {...rest}>{children}</View>;
+    return <View style={[base, { backgroundColor: tint || (overMap ? glass.fillMap : glass.fillSolid) }]} {...rest}>{children}</View>;
   }
   if (Platform.OS === 'web') {
     // Exact spec values (expo-blur's web BlurView appends its own 9 px blur + tint after our style).
     const filter = `blur(${glass.blur}px) saturate(${glass.saturate})`;
-    return <View style={[base, { backgroundColor: tint || glass.fill, backdropFilter: filter, WebkitBackdropFilter: filter }]} {...rest}>{children}</View>;
+    return <View style={[base, { backgroundColor: tint || (overMap ? glass.fillMapWeb : glass.fill), backdropFilter: filter, WebkitBackdropFilter: filter }]} {...rest}>{children}</View>;
   }
   return (
     <BlurView
@@ -67,7 +67,7 @@ export function Aurora({ style, opacity = 0.45 }) {
     { c: glass.aurora.colors[2], cx: '40%', cy: '105%', r: '45%' }
   ];
   return (
-    <Svg style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
+    <Svg width="100%" height="100%" style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
       <Defs>
         {blobs.map((b, i) => (
           <RadialGradient key={i} id={`${id}a${i}`} cx="50%" cy="50%" r="50%">
@@ -109,7 +109,7 @@ export function Gradient({ colors = ACCENT, angle = 135, style }) {
   const x = Math.cos(rad) / 2;
   const y = Math.sin(rad) / 2;
   return (
-    <Svg style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
+    <Svg width="100%" height="100%" style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
       <Defs>
         <LinearGradient id={id} x1={0.5 - x} y1={0.5 - y} x2={0.5 + x} y2={0.5 + y}>
           {colors.map((c, i) => <Stop key={i} offset={i / (colors.length - 1)} stopColor={c} />)}

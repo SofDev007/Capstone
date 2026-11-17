@@ -113,7 +113,11 @@ export const THEME_DEFAULTS = {
 export const glass = {
   bg: { deep: '#04060C', map: '#0A0F1C', raised: '#0E1424' },
   fill: 'rgba(22,30,52,.55)',
-  fillSolid: 'rgba(22,30,52,.88)', // no-blur fallback (old Android, "Reduce effects", over the map webview)
+  fillSolid: 'rgba(22,30,52,.88)', // no-blur fallback (old Android, "Reduce effects")
+  // No-blur panels over the neon map: .88 lets a lime route under small muted text drop to 4.15:1;
+  // .92 keeps ≥ 4.6:1 in the worst case. Web panels over the map use .72 (blur spreads the line).
+  fillMap: 'rgba(22,30,52,.92)',
+  fillMapWeb: 'rgba(22,30,52,.72)',
   border: 'rgba(255,255,255,.13)',
   highlight: 'inset 0 1px 0 rgba(255,255,255,.08)',
   shadow: '0 20px 40px -18px rgba(0,0,0,.7)',
