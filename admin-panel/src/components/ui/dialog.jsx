@@ -7,16 +7,16 @@ const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
 const DialogClose = DialogPrimitive.Close
 
-/** A ticket held up to read: counterfoil sheet over a dimmed desk. */
+/** Glass panel over a dimmed control room. */
 const DialogContent = React.forwardRef(({ className, children, wide, ...props }, ref) => (
   <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/40 data-[state=open]:animate-[fade-in_180ms_ease-out]" />
+    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-deep/60 backdrop-blur-[2px] data-[state=open]:animate-[fade-in_180ms_ease-out]" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
         "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-h-[calc(100vh-48px)] overflow-y-auto",
         wide ? "max-w-3xl" : "max-w-lg",
-        "bg-counterfoil border border-rule rounded-lg shadow-lifted p-6",
+        "glass !bg-glass-solid shadow-lifted p-6",
         "data-[state=open]:animate-[sheet-in_280ms_cubic-bezier(0.16,1,0.3,1)]",
         className
       )}

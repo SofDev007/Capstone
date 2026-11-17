@@ -9,7 +9,7 @@ import { AnekLatin_400Regular, AnekLatin_600SemiBold, AnekLatin_700Bold, AnekLat
 import { AnekDevanagari_400Regular, AnekDevanagari_600SemiBold, AnekDevanagari_700Bold, AnekDevanagari_800ExtraBold } from '@expo-google-fonts/anek-devanagari';
 import { AnekGurmukhi_400Regular, AnekGurmukhi_600SemiBold, AnekGurmukhi_700Bold, AnekGurmukhi_800ExtraBold } from '@expo-google-fonts/anek-gurmukhi';
 import { initI18n } from 'transit-shared/native/i18n';
-import { useTheme } from 'transit-shared/native/theme';
+import { useTheme, initTheme } from 'transit-shared/native/theme';
 import { AuthProvider } from '../lib/auth';
 import { LiveProvider } from '../lib/live';
 
@@ -27,7 +27,7 @@ export default function RootLayout() {
     AnekGurmukhi_400Regular, AnekGurmukhi_600SemiBold, AnekGurmukhi_700Bold, AnekGurmukhi_800ExtraBold
   });
 
-  useEffect(() => { initI18n().finally(() => setReady(true)); }, []);
+  useEffect(() => { Promise.all([initI18n(), initTheme('passenger')]).finally(() => setReady(true)); }, []);
   useEffect(() => { if (fontsLoaded && ready) SplashScreen.hideAsync().catch(() => {}); }, [fontsLoaded, ready]);
 
   if (!fontsLoaded || !ready) return null;

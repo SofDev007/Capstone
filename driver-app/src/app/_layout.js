@@ -10,7 +10,7 @@ import { AnekDevanagari_400Regular, AnekDevanagari_600SemiBold, AnekDevanagari_7
 import { AnekGurmukhi_400Regular, AnekGurmukhi_600SemiBold, AnekGurmukhi_700Bold, AnekGurmukhi_800ExtraBold } from '@expo-google-fonts/anek-gurmukhi';
 import { initI18n } from 'transit-shared/native/i18n';
 import { AuthProvider, useAuth } from '../lib/auth';
-import { useTheme } from 'transit-shared/native/theme';
+import { useTheme, initTheme } from 'transit-shared/native/theme';
 import { setupNotifications } from '../lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -51,7 +51,7 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    initI18n().finally(() => setI18nReady(true));
+    Promise.all([initI18n(), initTheme('driver')]).finally(() => setI18nReady(true));
     setupNotifications();
   }, []);
 
