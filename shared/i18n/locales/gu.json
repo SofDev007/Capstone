@@ -60,7 +60,11 @@
     "dob": "જન્મ તારીખ",
     "dobHint": "દિવસ/મહિનો/વર્ષ",
     "gender": "લિંગ",
-    "genders": { "male": "પુરુષ", "female": "સ્ત્રી", "other": "અન્ય" },
+    "genders": {
+      "male": "પુરુષ",
+      "female": "સ્ત્રી",
+      "other": "અન્ય"
+    },
     "phone": "મોબાઇલ નંબર",
     "email": "ઇમેઇલ",
     "password": "પાસવર્ડ બનાવો",
@@ -151,7 +155,17 @@
     "queued_other": "{{count}} સ્થાન ઑફલાઇન સાચવ્યાં — ઑનલાઇન થતાં મોકલાશે",
     "waitingGps": "GPS ની રાહ…",
     "startNeedsLocation": "મુસાફરી શરૂ કરવા લોકેશન ચાલુ કરો.",
-    "speed": "{{count}} કિમી/કલાક"
+    "speed": "{{count}} કિમી/કલાક",
+    "tripOf": "Trip {{n}} of {{m}}",
+    "liveGps": "Live GPS",
+    "gpsOff": "GPS off",
+    "toStop": "to {{stop}}",
+    "arrived": "Arrived ✓",
+    "speedLabel": "Speed",
+    "statusLabel": "Status",
+    "stopLabel": "Stop",
+    "report": "Report",
+    "holdSos": "Hold · SOS"
   },
   "location": {
     "on": "લોકેશન ચાલુ",
@@ -261,13 +275,24 @@
     "newAccount": "નવા છો? ખાતું બનાવો",
     "signedInAs": "{{name}} તરીકે સાઇન ઇન",
     "panicBusHint": "બસ પસંદ કરો જેથી કંટ્રોલ રૂમને ખબર પડે કે મદદ ક્યાં મોકલવી.",
-    "about": "લાઇવ આગમન સમય ડ્રાઇવરોના ફોનમાંથી આવે છે. નકશા ડેટા © OpenStreetMap યોગદાનકર્તાઓ."
+    "about": "લાઇવ આગમન સમય ડ્રાઇવરોના ફોનમાંથી આવે છે. નકશા ડેટા © OpenStreetMap યોગદાનકર્તાઓ.",
+    "arrivingAt": "Arriving at {{stop}}",
+    "locateMe": "Show my location",
+    "showAllBuses": "Show all buses",
+    "showTripBuses": "Show only buses for my trip",
+    "towards": "→ {{place}}"
   },
   "settings": {
     "title": "સેટિંગ્સ",
     "account": "ખાતું",
     "about": "વિશે",
     "version": "આવૃત્તિ {{version}}",
-    "privacy": "તમારું સ્થાન ફક્ત મુસાફરી દરમિયાન, અથવા SOS પછી 15 મિનિટ સુધી શેર થાય છે."
+    "privacy": "તમારું સ્થાન ફક્ત મુસાફરી દરમિયાન, અથવા SOS પછી 15 મિનિટ સુધી શેર થાય છે.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "reduceEffects": "Reduce effects",
+    "reduceEffectsHint": "Turns off blur and glow. Smoother on older phones."
   }
 }

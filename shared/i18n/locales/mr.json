@@ -60,7 +60,11 @@
     "dob": "जन्मतारीख",
     "dobHint": "दिवस/महिना/वर्ष",
     "gender": "लिंग",
-    "genders": { "male": "पुरुष", "female": "स्त्री", "other": "इतर" },
+    "genders": {
+      "male": "पुरुष",
+      "female": "स्त्री",
+      "other": "इतर"
+    },
     "phone": "मोबाइल नंबर",
     "email": "ईमेल",
     "password": "पासवर्ड तयार करा",
@@ -151,7 +155,17 @@
     "queued_other": "{{count}} स्थाने ऑफलाइन जतन केली — ऑनलाइन आल्यावर पाठवली जातील",
     "waitingGps": "GPS ची प्रतीक्षा…",
     "startNeedsLocation": "प्रवास सुरू करण्यासाठी लोकेशन चालू करा.",
-    "speed": "{{count}} किमी/तास"
+    "speed": "{{count}} किमी/तास",
+    "tripOf": "Trip {{n}} of {{m}}",
+    "liveGps": "Live GPS",
+    "gpsOff": "GPS off",
+    "toStop": "to {{stop}}",
+    "arrived": "Arrived ✓",
+    "speedLabel": "Speed",
+    "statusLabel": "Status",
+    "stopLabel": "Stop",
+    "report": "Report",
+    "holdSos": "Hold · SOS"
   },
   "location": {
     "on": "लोकेशन चालू",
@@ -261,13 +275,24 @@
     "newAccount": "नवीन आहात? खाते तयार करा",
     "signedInAs": "{{name}} म्हणून साइन इन",
     "panicBusHint": "बस निवडा म्हणजे कंट्रोल रूमला मदत कुठे पाठवायची ते कळेल.",
-    "about": "लाइव्ह आगमन वेळ चालकांच्या फोनवरून येते. नकाशा डेटा © OpenStreetMap योगदानकर्ते."
+    "about": "लाइव्ह आगमन वेळ चालकांच्या फोनवरून येते. नकाशा डेटा © OpenStreetMap योगदानकर्ते.",
+    "arrivingAt": "Arriving at {{stop}}",
+    "locateMe": "Show my location",
+    "showAllBuses": "Show all buses",
+    "showTripBuses": "Show only buses for my trip",
+    "towards": "→ {{place}}"
   },
   "settings": {
     "title": "सेटिंग्ज",
     "account": "खाते",
     "about": "माहिती",
     "version": "आवृत्ती {{version}}",
-    "privacy": "तुमचे स्थान फक्त प्रवासादरम्यान, किंवा SOS नंतर 15 मिनिटे शेअर होते."
+    "privacy": "तुमचे स्थान फक्त प्रवासादरम्यान, किंवा SOS नंतर 15 मिनिटे शेअर होते.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "reduceEffects": "Reduce effects",
+    "reduceEffectsHint": "Turns off blur and glow. Smoother on older phones."
   }
 }

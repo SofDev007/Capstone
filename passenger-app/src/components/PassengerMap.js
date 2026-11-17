@@ -213,7 +213,8 @@ export default function PassengerMap({ buses = [], lines = [], stops = [], me = 
   }, [me, from, to, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
+    // isolation: marker z-indexes stay inside the map (on web the DOM component shares the page)
+    <div style={{ position: 'absolute', inset: 0, isolation: 'isolate' }}>
       <div ref={el} className={reduceMotion ? 'ng-still' : undefined} style={{ width: '100%', height: '100%', background: night ? '#0A0F1C' : '#E8EAE4' }} />
     </div>
   );

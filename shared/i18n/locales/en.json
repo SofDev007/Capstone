@@ -60,7 +60,11 @@
     "dob": "Date of birth",
     "dobHint": "DD/MM/YYYY",
     "gender": "Gender",
-    "genders": { "male": "Male", "female": "Female", "other": "Other" },
+    "genders": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
     "phone": "Mobile number",
     "email": "Email",
     "password": "Create a password",
@@ -151,7 +155,17 @@
     "queued_other": "{{count}} positions saved offline — send when you're back online",
     "waitingGps": "Waiting for GPS…",
     "startNeedsLocation": "Turn on location to start a trip.",
-    "speed": "{{count}} km/h"
+    "speed": "{{count}} km/h",
+    "tripOf": "Trip {{n}} of {{m}}",
+    "liveGps": "Live GPS",
+    "gpsOff": "GPS off",
+    "toStop": "to {{stop}}",
+    "arrived": "Arrived ✓",
+    "speedLabel": "Speed",
+    "statusLabel": "Status",
+    "stopLabel": "Stop",
+    "report": "Report",
+    "holdSos": "Hold · SOS"
   },
   "location": {
     "on": "Location on",
@@ -261,13 +275,24 @@
     "newAccount": "New here? Create an account",
     "signedInAs": "Signed in as {{name}}",
     "panicBusHint": "Pick the bus so the control room knows where to send help.",
-    "about": "Live arrival times come from the drivers' phones. Map data © OpenStreetMap contributors."
+    "about": "Live arrival times come from the drivers' phones. Map data © OpenStreetMap contributors.",
+    "arrivingAt": "Arriving at {{stop}}",
+    "locateMe": "Show my location",
+    "showAllBuses": "Show all buses",
+    "showTripBuses": "Show only buses for my trip",
+    "towards": "→ {{place}}"
   },
   "settings": {
     "title": "Settings",
     "account": "Account",
     "about": "About",
     "version": "Version {{version}}",
-    "privacy": "Your location is only shared during a trip, or for 15 minutes after an SOS."
+    "privacy": "Your location is only shared during a trip, or for 15 minutes after an SOS.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "reduceEffects": "Reduce effects",
+    "reduceEffectsHint": "Turns off blur and glow. Smoother on older phones."
   }
 }

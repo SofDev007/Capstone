@@ -30,12 +30,19 @@ export default function Glass({ children, style, radius = glass.radius.panel, ov
   const target = useContext(TargetContext);
 
   if (!theme.night) {
-    return <View style={[{ backgroundColor: theme.surface, borderColor: theme.rule, borderWidth: 1, borderRadius: Math.min(radius, 14) }, style]} {...rest}>{children}</View>;
+    // Ticket Stock corners (≤ 14), except round buttons/pills which stay round.
+    const r = radius >= 24 ? radius : Math.min(radius, 14);
+    return <View style={[{ backgroundColor: theme.surface, borderColor: theme.rule, borderWidth: 1, borderRadius: r }, style]} {...rest}>{children}</View>;
   }
 
   const base = [styles.glass, { borderRadius: radius }, style];
   if (!canBlurHere(target, overMap, reduceEffects)) {
     return <View style={[base, { backgroundColor: tint || glass.fillSolid }]} {...rest}>{children}</View>;
+  }
+  if (Platform.OS === 'web') {
+    // Exact spec values (expo-blur's web BlurView appends its own 9 px blur + tint after our style).
+    const filter = `blur(${glass.blur}px) saturate(${glass.saturate})`;
+    return <View style={[base, { backgroundColor: tint || glass.fill, backdropFilter: filter, WebkitBackdropFilter: filter }]} {...rest}>{children}</View>;
   }
   return (
     <BlurView
