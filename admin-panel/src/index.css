@@ -283,6 +283,48 @@
   animation: alert-lit 1.6s ease-in-out infinite;
 }
 
+/* Replay scrubber: native range over a custom track */
+.replay-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.replay-range::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 16px;
+}
+.replay-range::-moz-range-track {
+  background: transparent;
+}
+.replay-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px #3EE6FF;
+}
+.replay-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px #3EE6FF;
+}
+
+/* Unread alerts badge on the dock */
+@keyframes badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 240, 255, 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
 @keyframes blink {
   50% {
     opacity: 0.2;
@@ -314,7 +356,7 @@
   }
 }
 .sos-ripple {
-  position: relative;
+  /* position comes from .maplibregl-marker (absolute) — don't override it */
   width: 0;
   height: 0;
   pointer-events: none;
