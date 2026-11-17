@@ -5,7 +5,7 @@ import { Field } from '../components/ui/dialog';
 import { StageStrip } from '../components/ticket';
 import { stocks } from '@shared/theme/tokens.js';
 
-const DEMO_STOPS = ['Depot', 'ISBT 43', 'Sector 22', 'ISBT 17', 'Matka Chowk', 'Sukhna Lake'].map((name, i) => ({ id: String(i), name }));
+const DEMO_STOPS = ['Mhow Naka', 'Ranjit Hanuman', 'Sethi Gate', 'Footi Kothi', 'Hawa Bangla', 'CAT'].map((name, i) => ({ id: String(i), name }));
 
 export default function Login({ setIsAuthenticated }) {
   const [email, setEmail] = useState('');

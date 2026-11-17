@@ -79,7 +79,7 @@ before(async () => {
   };
   liveTracker = await import('../services/liveTracker.js');
   google = await import('../services/google.js');
-  seedData = await (await import('../scripts/seed.js')).seed({ log: () => {} });
+  seedData = await (await import('../scripts/seed.js')).seed({ city: 'chandigarh', log: () => {} });
   await models.Admin.create({ username: 'boss', email: 'boss@example.com', password: 'adminpass1' });
 });
 

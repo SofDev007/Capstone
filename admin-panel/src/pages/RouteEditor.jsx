@@ -230,7 +230,7 @@ export default function RouteEditor() {
 
             <div className="grid grid-cols-[110px_1fr] gap-3">
               <Field label="Number"><input className="field num text-[24px]" value={draft.number} onChange={(e) => update({ number: e.target.value })} placeholder="12" /></Field>
-              <Field label="Name"><input className="field" value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="ISBT 43 – Sukhna Lake" /></Field>
+              <Field label="Name"><input className="field" value={draft.name} onChange={(e) => update({ name: e.target.value })} placeholder="Mhow Naka – CAT" /></Field>
             </div>
 
             <div>

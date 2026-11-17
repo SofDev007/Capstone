@@ -1,6 +1,10 @@
-// Demo data: Chandigarh tricity stops, 4 routes with timetables, buses, approved drivers,
-// and two pending driver applications. Idempotent (upserts by name/number/email).
-// Usage: node scripts/seed.js        (uses MONGODB_URI from .env)
+// Demo data per city: stops, routes with timetables, buses, approved drivers and two pending
+// driver applications. Idempotent (upserts by name/number/email). One city per database:
+// route numbers repeat across cities.
+//   indore:     data/indore.json (12 routes from bus_routes.csv; stops marked 'approx' were estimated)
+//   chandigarh: below (used by the tests)
+// Usage: node scripts/seed.js [--city=indore|chandigarh]   (uses MONGODB_URI from .env)
+import { readFileSync } from 'node:fs';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Stop from '../models/Stop.js';
@@ -65,7 +69,14 @@ const APPLICANTS = [
   { name: 'Suresh Yadav', email: 'suresh.applicant@transit.local', phone: '+91 98720 22222', city: 'Panchkula', licenseNumber: 'HR0320150067890', experienceYears: 12 }
 ];
 
-export async function seed({ log = console.log } = {}) {
+const CITIES = {
+  chandigarh: { stops: STOPS, routes: ROUTES, buses: BUSES, applicants: APPLICANTS, state: 'Punjab' },
+  indore: JSON.parse(readFileSync(new URL('../data/indore.json', import.meta.url)))
+};
+
+export async function seed({ city = 'indore', log = console.log } = {}) {
+  if (!CITIES[city]) throw new Error(`Unknown city "${city}" (${Object.keys(CITIES).join(', ')})`);
+  const { stops: STOPS, routes: ROUTES, buses: BUSES, applicants: APPLICANTS, state } = CITIES[city];
   const stopIds = {};
   for (const [key, [name, lat, lng]] of Object.entries(STOPS)) {
     const stop = await Stop.findOneAndUpdate(
@@ -82,9 +93,10 @@ export async function seed({ log = console.log } = {}) {
     const points = r.stops.map((k) => ({ lat: STOPS[k][1], lng: STOPS[k][2] }));
     const directions = await getDirections(points);
     let minutes = 0;
+    // Timetabled cities give minutes from the first stop; otherwise use driving time + 30 s per stop.
     const stops = r.stops.map((k, i) => {
       if (i > 0) minutes += directions.legs[i - 1].duration / 60 + 0.5;
-      return { stop: stopIds[k], offsetMinutes: Math.round(minutes) };
+      return { stop: stopIds[k], offsetMinutes: r.offsets ? r.offsets[i] : Math.round(minutes) };
     });
     const route = await Route.findOneAndUpdate(
       { number: r.number },
@@ -107,7 +119,7 @@ export async function seed({ log = console.log } = {}) {
     let driver = await Driver.findOne({ email: b.driver });
     if (!driver) {
       driver = await Driver.create({
-        name: b.name, email: b.driver, phone: '+91 90000 0000' + b.busNumber[0],
+        name: b.name, email: b.driver, phone: b.phone || '+91 90000 0000' + b.busNumber[0],
         licenseNumber: `DEMO-${b.busNumber}`, password: DEMO_DRIVER_PASSWORD, status: 'approved'
       });
     }
@@ -122,7 +134,7 @@ export async function seed({ log = console.log } = {}) {
     if (await Driver.exists({ email: a.email })) continue;
     const doc = await saveDocument(parseImageDataUrl(PLACEHOLDER_PNG));
     await Driver.create({
-      ...a, password: DEMO_DRIVER_PASSWORD, status: 'pending', state: 'Punjab',
+      ...a, password: DEMO_DRIVER_PASSWORD, status: 'pending', state,
       address: `House 12, ${a.city}`, dateOfBirth: new Date('1988-04-12'), gender: 'male',
       licenseClass: 'Transport (HPMV)', licenseExpiry: new Date(Date.now() + 3 * 365 * 86400000),
       emergencyContact: { name: 'Family contact', phone: '+91 98000 00000' }, idType: 'Voter ID',
@@ -130,13 +142,15 @@ export async function seed({ log = console.log } = {}) {
     });
   }
   log(`Pending applications: ${APPLICANTS.length}`);
-  return { stopIds, routeIds };
+  return { stopIds, routeIds, drivers: BUSES.map((b) => b.driver) };
 }
 
-// Run directly: node scripts/seed.js
+export const cityArg = () => process.argv.find((a) => a.startsWith('--city='))?.slice(7);
+
+// Run directly: node scripts/seed.js [--city=...]
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('scripts/seed.js')) {
   dotenv.config();
   await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/transport_tracking');
-  await seed();
+  await seed({ city: cityArg() });
   await mongoose.disconnect();
 }

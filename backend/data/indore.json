@@ -1,0 +1,1104 @@
+{
+ "stops": {
+  "Mhow Naka": [
+   "Mhow Naka",
+   22.70544,
+   75.84365
+  ],
+  "Ranjit Hanuman": [
+   "Ranjit Hanuman",
+   22.70005,
+   75.83567
+  ],
+  "Footi Kothi": [
+   "Footi Kothi",
+   22.69205,
+   75.82714
+  ],
+  "Hawa Bangla": [
+   "Hawa Bangla",
+   22.68881,
+   75.8256
+  ],
+  "CAT": [
+   "CAT",
+   22.66859,
+   75.81899
+  ],
+  "Manmandir": [
+   "Manmandir",
+   22.745,
+   75.879,
+   "approx"
+  ],
+  "Patni Pura": [
+   "Patni Pura",
+   22.73776,
+   75.87899
+  ],
+  "L.I.G Chouraha": [
+   "L.I.G Chouraha",
+   22.7336,
+   75.89011
+  ],
+  "Anup Nagar": [
+   "Anup Nagar",
+   22.73,
+   75.8925,
+   "approx"
+  ],
+  "Industry House": [
+   "Industry House",
+   22.72747,
+   75.88803
+  ],
+  "G.P.O": [
+   "G.P.O",
+   22.70754,
+   75.87926
+  ],
+  "Indra Complex": [
+   "Indra Complex",
+   22.704,
+   75.878,
+   "approx"
+  ],
+  "Maa Vihar": [
+   "Maa Vihar",
+   22.696,
+   75.874,
+   "approx"
+  ],
+  "Bhandari Mill": [
+   "Bhandari Mill",
+   22.732,
+   75.872,
+   "approx"
+  ],
+  "Rajkumar": [
+   "Rajkumar",
+   22.72833,
+   75.86811
+  ],
+  "Chiman Bag Chouraha": [
+   "Chiman Bag Chouraha",
+   22.72596,
+   75.86169
+  ],
+  "Gurudwara (Jawahar Marg)": [
+   "Gurudwara (Jawahar Marg)",
+   22.7164,
+   75.85544
+  ],
+  "Pandharinath": [
+   "Pandharinath",
+   22.71419,
+   75.8555
+  ],
+  "Triveni": [
+   "Triveni",
+   22.70092,
+   75.84908
+  ],
+  "Lokmanya Nagar": [
+   "Lokmanya Nagar",
+   22.69135,
+   75.8471
+  ],
+  "Rajendra Nagar": [
+   "Rajendra Nagar",
+   22.67037,
+   75.83218
+  ],
+  "Rau": [
+   "Rau",
+   22.63878,
+   75.81717
+  ],
+  "Goiri Nagar": [
+   "Goiri Nagar",
+   22.765,
+   75.862,
+   "approx"
+  ],
+  "MR-10": [
+   "MR-10",
+   22.7717,
+   75.86295
+  ],
+  "Bapat Chouraha": [
+   "Bapat Chouraha",
+   22.7545,
+   75.88019
+  ],
+  "Sayaji": [
+   "Sayaji",
+   22.75133,
+   75.88949
+  ],
+  "Vijay Nagar": [
+   "Vijay Nagar",
+   22.74923,
+   75.89492
+  ],
+  "Malviya Pup": [
+   "Malviya Pup",
+   22.7486,
+   75.9035
+  ],
+  "Khajrana Chouraha": [
+   "Khajrana Chouraha",
+   22.73219,
+   75.90197
+  ],
+  "Bengali Chouraha": [
+   "Bengali Chouraha",
+   22.71983,
+   75.90616
+  ],
+  "Musa Khedi": [
+   "Musa Khedi",
+   22.69284,
+   75.89974
+  ],
+  "Teen Imli Chouraha": [
+   "Teen Imli Chouraha",
+   22.68757,
+   75.884
+  ],
+  "Ring Road Gurudwara": [
+   "Ring Road Gurudwara",
+   22.683,
+   75.879,
+   "approx"
+  ],
+  "Pushp Nagar": [
+   "Pushp Nagar",
+   22.733,
+   75.8975,
+   "approx"
+  ],
+  "Anand Bajar": [
+   "Anand Bajar",
+   22.72676,
+   75.89436
+  ],
+  "Geeta Bhavan Temple": [
+   "Geeta Bhavan Temple",
+   22.71838,
+   75.88431
+  ],
+  "Piliyahana": [
+   "Piliyahana",
+   22.70599,
+   75.90586
+  ],
+  "Prakash Nagar": [
+   "Prakash Nagar",
+   22.69618,
+   75.88054
+  ],
+  "Nolakha": [
+   "Nolakha",
+   22.69872,
+   75.8779
+  ],
+  "Gandhi Nagar": [
+   "Gandhi Nagar",
+   22.73896,
+   75.79753
+  ],
+  "BSF": [
+   "BSF",
+   22.7268,
+   75.8157
+  ],
+  "Kalani Nagar": [
+   "Kalani Nagar",
+   22.72491,
+   75.82363
+  ],
+  "Tirupati Nagar": [
+   "Tirupati Nagar",
+   22.72203,
+   75.82888
+  ],
+  "Bada Ganpati": [
+   "Bada Ganpati",
+   22.72089,
+   75.83976
+  ],
+  "Raj Mohalla": [
+   "Raj Mohalla",
+   22.71478,
+   75.83798
+  ],
+  "Ganwal Bus Stand": [
+   "Ganwal Bus Stand",
+   22.71288,
+   75.84098
+  ],
+  "Mog Line": [
+   "Mog Line",
+   22.70896,
+   75.84173
+  ],
+  "Treasure Island": [
+   "Treasure Island",
+   22.72157,
+   75.87862
+  ],
+  "Rly. Station": [
+   "Rly. Station",
+   22.71987,
+   75.86768
+  ],
+  "Madhu Milan": [
+   "Madhu Milan",
+   22.71396,
+   75.87417
+  ],
+  "Indrapuri": [
+   "Indrapuri",
+   22.69061,
+   75.86913
+  ],
+  "Deen Dayal": [
+   "Deen Dayal",
+   22.68787,
+   75.86179
+  ],
+  "Sch. No.54": [
+   "Sch. No.54",
+   22.7562,
+   75.8906,
+   "approx"
+  ],
+  "Sch. No.74": [
+   "Sch. No.74",
+   22.7705,
+   75.8935,
+   "approx"
+  ],
+  "Sch. No.78": [
+   "Sch. No.78",
+   22.7662,
+   75.9001
+  ],
+  "Shalimar": [
+   "Shalimar",
+   22.76264,
+   75.90091
+  ],
+  "Bombay Hospital": [
+   "Bombay Hospital",
+   22.75467,
+   75.90349
+  ],
+  "Velocity": [
+   "Velocity",
+   22.7454,
+   75.90308
+  ],
+  "Nanda Nagar": [
+   "Nanda Nagar",
+   22.7481,
+   75.87811
+  ],
+  "Malva Mill": [
+   "Malva Mill",
+   22.73408,
+   75.87507
+  ],
+  "GSITS": [
+   "GSITS",
+   22.72513,
+   75.87401
+  ],
+  "High Court": [
+   "High Court",
+   22.71946,
+   75.87375
+  ],
+  "Regal Square": [
+   "Regal Square",
+   22.718,
+   75.8755,
+   "approx"
+  ],
+  "M.Y. Hospital": [
+   "M.Y. Hospital",
+   22.71353,
+   75.87956
+  ],
+  "Bhawarkuwa": [
+   "Bhawarkuwa",
+   22.69188,
+   75.86836
+  ],
+  "Khandwa Road": [
+   "Khandwa Road",
+   22.61381,
+   75.8882
+  ],
+  "Tejaji Nagar": [
+   "Tejaji Nagar",
+   22.64037,
+   75.87842
+  ],
+  "Khandwa Naka": [
+   "Khandwa Naka",
+   22.6702,
+   75.88104
+  ],
+  "University": [
+   "University",
+   22.6893,
+   75.87047
+  ],
+  "Rauji Bazar": [
+   "Rauji Bazar",
+   22.7125,
+   75.852,
+   "approx"
+  ],
+  "Palsikar Colony": [
+   "Palsikar Colony",
+   22.7054,
+   75.858
+  ],
+  "Collectorate": [
+   "Collectorate",
+   22.70851,
+   75.85487
+  ],
+  "Annapurna": [
+   "Annapurna",
+   22.69484,
+   75.83885
+  ],
+  "Golden School": [
+   "Golden School",
+   22.68471,
+   75.83106
+  ],
+  "Police Line": [
+   "Police Line",
+   22.748,
+   75.834,
+   "approx"
+  ],
+  "Sangam Nagar": [
+   "Sangam Nagar",
+   22.74154,
+   75.83549
+  ],
+  "Marimata Chouraha": [
+   "Marimata Chouraha",
+   22.73406,
+   75.84941
+  ],
+  "Narayan Bag": [
+   "Narayan Bag",
+   22.7298,
+   75.85622
+  ],
+  "Chhatripura": [
+   "Chhatripura",
+   22.712,
+   75.85,
+   "approx"
+  ],
+  "Sethi Gate": [
+   "Sethi Gate",
+   22.69205,
+   75.82714,
+   "approx"
+  ],
+  "Anup": [
+   "Anup",
+   22.74259,
+   75.879,
+   "approx"
+  ],
+  "Atal Dwar": [
+   "Atal Dwar",
+   22.7336,
+   75.89011,
+   "approx"
+  ],
+  "L.I.G Thana": [
+   "L.I.G Thana",
+   22.7336,
+   75.89011,
+   "approx"
+  ],
+  "Nagar Nigam": [
+   "Nagar Nigam",
+   22.72596,
+   75.86169,
+   "approx"
+  ],
+  "Gopal Bag": [
+   "Gopal Bag",
+   22.70092,
+   75.84908,
+   "approx"
+  ],
+  "Nemi Nagar": [
+   "Nemi Nagar",
+   22.69135,
+   75.8471,
+   "approx"
+  ],
+  "Vinay Nagar": [
+   "Vinay Nagar",
+   22.68436,
+   75.84212,
+   "approx"
+  ],
+  "Rly. Crossing": [
+   "Rly. Crossing",
+   22.68436,
+   75.84212,
+   "approx"
+  ],
+  "Chamelidevi": [
+   "Chamelidevi",
+   22.67737,
+   75.83715,
+   "approx"
+  ],
+  "Veena Nagar": [
+   "Veena Nagar",
+   22.76835,
+   75.86247,
+   "approx"
+  ],
+  "Sukhaliya": [
+   "Sukhaliya",
+   22.7717,
+   75.86295,
+   "approx"
+  ],
+  "Sheikh Hasina Hospital": [
+   "Sheikh Hasina Hospital",
+   22.72117,
+   75.88766,
+   "approx"
+  ],
+  "Senpal School": [
+   "Senpal School",
+   22.71219,
+   75.89509,
+   "approx"
+  ],
+  "Ramchandra Nagar": [
+   "Ramchandra Nagar",
+   22.72203,
+   75.82888,
+   "approx"
+  ],
+  "Antim Chouraha": [
+   "Antim Chouraha",
+   22.71682,
+   75.83857,
+   "approx"
+  ],
+  "Narayan Kothi": [
+   "Narayan Kothi",
+   22.72452,
+   75.88333,
+   "approx"
+  ],
+  "Clerk Colony": [
+   "Clerk Colony",
+   22.75655,
+   75.87005,
+   "approx"
+  ],
+  "Pardeshipura": [
+   "Pardeshipura",
+   22.75655,
+   75.87005,
+   "approx"
+  ],
+  "Teen Piliya": [
+   "Teen Piliya",
+   22.75233,
+   75.87408,
+   "approx"
+  ],
+  "Rani Satigate": [
+   "Rani Satigate",
+   22.72513,
+   75.87401,
+   "approx"
+  ],
+  "Orient College": [
+   "Orient College",
+   22.66026,
+   75.88017,
+   "approx"
+  ],
+  "Asaram Chouraha": [
+   "Asaram Chouraha",
+   22.67975,
+   75.87576,
+   "approx"
+  ],
+  "G.D.C.": [
+   "G.D.C.",
+   22.70851,
+   75.85487,
+   "approx"
+  ],
+  "Indore Wire": [
+   "Indore Wire",
+   22.7378,
+   75.84245,
+   "approx"
+  ],
+  "Rambag Chouraha": [
+   "Rambag Chouraha",
+   22.7298,
+   75.85622,
+   "approx"
+  ],
+  "B. Choki": [
+   "B. Choki",
+   22.72387,
+   75.85415,
+   "approx"
+  ],
+  "Malganj": [
+   "Malganj",
+   22.71794,
+   75.85207,
+   "approx"
+  ],
+  "Narsing Bazar": [
+   "Narsing Bazar",
+   22.71794,
+   75.85207,
+   "approx"
+  ]
+ },
+ "routes": [
+  {
+   "number": "1",
+   "name": "Mhow Naka – CAT",
+   "color": "#17633F",
+   "stops": [
+    "Mhow Naka",
+    "Ranjit Hanuman",
+    "Sethi Gate",
+    "Footi Kothi",
+    "Hawa Bangla",
+    "CAT"
+   ],
+   "offsets": [
+    0,
+    3,
+    8,
+    8,
+    13,
+    23
+   ],
+   "departures": [
+    "08:15",
+    "09:25"
+   ]
+  },
+  {
+   "number": "2",
+   "name": "Manmandir – Maa Vihar",
+   "color": "#7A5600",
+   "stops": [
+    "Manmandir",
+    "Anup",
+    "Patni Pura",
+    "Atal Dwar",
+    "L.I.G Thana",
+    "L.I.G Chouraha",
+    "Anup Nagar",
+    "Industry House",
+    "G.P.O",
+    "Indra Complex",
+    "Maa Vihar"
+   ],
+   "offsets": [
+    0,
+    3,
+    8,
+    13,
+    13,
+    13,
+    18,
+    18,
+    23,
+    23,
+    33
+   ],
+   "departures": [
+    "07:10",
+    "09:25"
+   ]
+  },
+  {
+   "number": "4",
+   "name": "Bhandari Mill – Rau",
+   "color": "#5B3A9E",
+   "stops": [
+    "Bhandari Mill",
+    "Rajkumar",
+    "Chiman Bag Chouraha",
+    "Nagar Nigam",
+    "Gurudwara (Jawahar Marg)",
+    "Pandharinath",
+    "Gopal Bag",
+    "Triveni",
+    "Lokmanya Nagar",
+    "Nemi Nagar",
+    "Vinay Nagar",
+    "Rly. Crossing",
+    "Chamelidevi",
+    "Rajendra Nagar",
+    "Rau"
+   ],
+   "offsets": [
+    0,
+    10,
+    15,
+    15,
+    20,
+    20,
+    25,
+    25,
+    30,
+    30,
+    35,
+    35,
+    40,
+    45,
+    50
+   ],
+   "departures": [
+    "07:00",
+    "09:20"
+   ]
+  },
+  {
+   "number": "5",
+   "name": "Goiri Nagar – Ring Road Gurudwara",
+   "color": "#A3184A",
+   "stops": [
+    "Goiri Nagar",
+    "Veena Nagar",
+    "MR-10",
+    "Sukhaliya",
+    "Bapat Chouraha",
+    "Sayaji",
+    "Vijay Nagar",
+    "Malviya Pup",
+    "Khajrana Chouraha",
+    "Bengali Chouraha",
+    "Musa Khedi",
+    "Teen Imli Chouraha",
+    "Ring Road Gurudwara"
+   ],
+   "offsets": [
+    0,
+    5,
+    10,
+    10,
+    15,
+    20,
+    20,
+    20,
+    25,
+    30,
+    35,
+    40,
+    45
+   ],
+   "departures": [
+    "06:50",
+    "08:55"
+   ]
+  },
+  {
+   "number": "6",
+   "name": "Pushp Nagar – Nolakha",
+   "color": "#1D4F8F",
+   "stops": [
+    "Pushp Nagar",
+    "Anand Bajar",
+    "Sheikh Hasina Hospital",
+    "Geeta Bhavan Temple",
+    "Senpal School",
+    "Piliyahana",
+    "Musa Khedi",
+    "Teen Imli Chouraha",
+    "Prakash Nagar",
+    "Nolakha"
+   ],
+   "offsets": [
+    0,
+    5,
+    10,
+    13,
+    18,
+    23,
+    28,
+    33,
+    38,
+    38
+   ],
+   "departures": [
+    "07:00",
+    "09:10"
+   ]
+  },
+  {
+   "number": "9",
+   "name": "Gandhi Nagar – Mog Line",
+   "color": "#8A3B12",
+   "stops": [
+    "Gandhi Nagar",
+    "BSF",
+    "Kalani Nagar",
+    "Tirupati Nagar",
+    "Ramchandra Nagar",
+    "Bada Ganpati",
+    "Antim Chouraha",
+    "Raj Mohalla",
+    "Ganwal Bus Stand",
+    "Mog Line"
+   ],
+   "offsets": [
+    0,
+    8,
+    13,
+    18,
+    18,
+    23,
+    28,
+    30,
+    35,
+    38
+   ],
+   "departures": [
+    "07:15",
+    "09:05"
+   ]
+  },
+  {
+   "number": "10",
+   "name": "Industry House – Deen Dayal",
+   "color": "#0F6E6E",
+   "stops": [
+    "Industry House",
+    "Narayan Kothi",
+    "Treasure Island",
+    "Rly. Station",
+    "Madhu Milan",
+    "Indrapuri",
+    "Deen Dayal"
+   ],
+   "offsets": [
+    0,
+    5,
+    10,
+    15,
+    18,
+    28,
+    28
+   ],
+   "departures": [
+    "07:10",
+    "09:20"
+   ]
+  },
+  {
+   "number": "11",
+   "name": "Sch. No.54 – Velocity",
+   "color": "#6B2C5F",
+   "stops": [
+    "Sch. No.54",
+    "Sch. No.74",
+    "Sch. No.78",
+    "Shalimar",
+    "Bombay Hospital",
+    "Velocity"
+   ],
+   "offsets": [
+    0,
+    5,
+    8,
+    13,
+    18,
+    23
+   ],
+   "departures": [
+    "07:00",
+    "09:05"
+   ]
+  },
+  {
+   "number": "12",
+   "name": "Goiri Nagar – Bhawarkuwa",
+   "color": "#3D5A1E",
+   "stops": [
+    "Goiri Nagar",
+    "Clerk Colony",
+    "Pardeshipura",
+    "Teen Piliya",
+    "Nanda Nagar",
+    "Patni Pura",
+    "Malva Mill",
+    "Rani Satigate",
+    "GSITS",
+    "High Court",
+    "Regal Square",
+    "M.Y. Hospital",
+    "Bhawarkuwa"
+   ],
+   "offsets": [
+    0,
+    5,
+    5,
+    8,
+    10,
+    13,
+    18,
+    20,
+    20,
+    25,
+    25,
+    30,
+    38
+   ],
+   "departures": [
+    "07:05",
+    "09:10"
+   ]
+  },
+  {
+   "number": "13",
+   "name": "Khandwa Road – Bhawarkuwa",
+   "color": "#9C2F2F",
+   "stops": [
+    "Khandwa Road",
+    "Tejaji Nagar",
+    "Orient College",
+    "Khandwa Naka",
+    "Asaram Chouraha",
+    "University",
+    "Indrapuri",
+    "Bhawarkuwa"
+   ],
+   "offsets": [
+    0,
+    5,
+    10,
+    13,
+    18,
+    23,
+    25,
+    25
+   ],
+   "departures": [
+    "07:15",
+    "09:25"
+   ]
+  },
+  {
+   "number": "14",
+   "name": "Rauji Bazar – Golden School",
+   "color": "#2F3E8F",
+   "stops": [
+    "Rauji Bazar",
+    "Palsikar Colony",
+    "Collectorate",
+    "G.D.C.",
+    "Annapurna",
+    "Golden School"
+   ],
+   "offsets": [
+    0,
+    5,
+    10,
+    10,
+    20,
+    23
+   ],
+   "departures": [
+    "07:15",
+    "09:30"
+   ]
+  },
+  {
+   "number": "15",
+   "name": "Police Line – Chhatripura",
+   "color": "#7A4A00",
+   "stops": [
+    "Police Line",
+    "Sangam Nagar",
+    "Indore Wire",
+    "Marimata Chouraha",
+    "Narayan Bag",
+    "Rambag Chouraha",
+    "B. Choki",
+    "Malganj",
+    "Narsing Bazar",
+    "Chhatripura"
+   ],
+   "offsets": [
+    0,
+    8,
+    13,
+    18,
+    23,
+    23,
+    28,
+    33,
+    33,
+    38
+   ],
+   "departures": [
+    "06:55",
+    "09:05"
+   ]
+  }
+ ],
+ "buses": [
+  {
+   "busNumber": "1",
+   "plateNumber": "MP09TR6093",
+   "capacity": 40,
+   "route": "1",
+   "driver": "demo.driver1@transit.local",
+   "name": "Rakesh Verma",
+   "phone": "+91 90000 0000"
+  },
+  {
+   "busNumber": "2",
+   "plateNumber": "MP09TR2412",
+   "capacity": 40,
+   "route": "2",
+   "driver": "demo.driver2@transit.local",
+   "name": "Sunil Yadav",
+   "phone": "+91 90000 0001"
+  },
+  {
+   "busNumber": "4",
+   "plateNumber": "MP09TR6962",
+   "capacity": 40,
+   "route": "4",
+   "driver": "demo.driver3@transit.local",
+   "name": "Mahesh Patel",
+   "phone": "+91 90000 0002"
+  },
+  {
+   "busNumber": "5",
+   "plateNumber": "MP09TR5350",
+   "capacity": 40,
+   "route": "5",
+   "driver": "demo.driver4@transit.local",
+   "name": "Anil Chouhan",
+   "phone": "+91 90000 0003"
+  },
+  {
+   "busNumber": "6",
+   "plateNumber": "MP09TR5414",
+   "capacity": 40,
+   "route": "6",
+   "driver": "demo.driver5@transit.local",
+   "name": "Deepak Solanki",
+   "phone": "+91 90000 0004"
+  },
+  {
+   "busNumber": "9",
+   "plateNumber": "MP09TR6520",
+   "capacity": 40,
+   "route": "9",
+   "driver": "demo.driver6@transit.local",
+   "name": "Imran Khan",
+   "phone": "+91 90000 0005"
+  },
+  {
+   "busNumber": "10",
+   "plateNumber": "MP09TR2641",
+   "capacity": 40,
+   "route": "10",
+   "driver": "demo.driver7@transit.local",
+   "name": "Vijay Thakur",
+   "phone": "+91 90000 0006"
+  },
+  {
+   "busNumber": "11",
+   "plateNumber": "MP09TR3316",
+   "capacity": 40,
+   "route": "11",
+   "driver": "demo.driver8@transit.local",
+   "name": "Santosh Malviya",
+   "phone": "+91 90000 0007"
+  },
+  {
+   "busNumber": "12",
+   "plateNumber": "MP09TR9804",
+   "capacity": 40,
+   "route": "12",
+   "driver": "demo.driver9@transit.local",
+   "name": "Ramesh Jat",
+   "phone": "+91 90000 0008"
+  },
+  {
+   "busNumber": "13",
+   "plateNumber": "MP09TR6160",
+   "capacity": 40,
+   "route": "13",
+   "driver": "demo.driver10@transit.local",
+   "name": "Pradeep Rathore",
+   "phone": "+91 90000 0009"
+  },
+  {
+   "busNumber": "14",
+   "plateNumber": "MP09TR3886",
+   "capacity": 40,
+   "route": "14",
+   "driver": "demo.driver11@transit.local",
+   "name": "Arjun Parmar",
+   "phone": "+91 90000 0010"
+  },
+  {
+   "busNumber": "15",
+   "plateNumber": "MP09TR4246",
+   "capacity": 40,
+   "route": "15",
+   "driver": "demo.driver12@transit.local",
+   "name": "Manoj Tiwari",
+   "phone": "+91 90000 0011"
+  }
+ ],
+ "applicants": [
+  {
+   "name": "Rohit Kushwah",
+   "email": "rohit.applicant@transit.local",
+   "phone": "+91 98260 11111",
+   "city": "Indore",
+   "licenseNumber": "MP0920190012345",
+   "experienceYears": 6
+  },
+  {
+   "name": "Salim Qureshi",
+   "email": "salim.applicant@transit.local",
+   "phone": "+91 98930 22222",
+   "city": "Dewas",
+   "licenseNumber": "MP4120150067890",
+   "experienceYears": 11
+  }
+ ],
+ "state": "Madhya Pradesh"
+}

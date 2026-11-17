@@ -24,8 +24,11 @@ cd driver-app && npm install && npx expo start --web
 ```
 
 Demo accounts (local only): admin `admin@demo.local` / `Demo@1234`;
-drivers `demo.driver1@transit.local` … `demo.driver4@transit.local` / `Demo@1234`.
-The demo city is Chandigarh–Mohali–Zirakpur (20 stops, 4 routes with timetables, 2 pending driver applications).
+drivers `demo.driver1@transit.local` … `demo.driver12@transit.local` / `Demo@1234`.
+The demo city is Indore (108 stops, 12 routes from `backend/data/indore.json`, morning timetables, 12 buses,
+2 pending driver applications); drivers are `demo.driver1` … `demo.driver12`. Stops marked `approx` in that file were
+estimated; drag them into place in the admin Route Editor. `npm run demo -- --city=chandigarh` runs the old
+Chandigarh demo (4 routes, used by the tests).
 
 ## Run for real
 
