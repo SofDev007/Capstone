@@ -250,3 +250,80 @@ Paper on paper. Tickets lie flat on the ground with a 1px rule border and a cris
 - **Don't** use gradients, glass, glows, or icon-tile cards.
 - **Don't** put tracked uppercase eyebrows above sections; the serial line is the only tracked label.
 - **Don't** use grey text on a coloured stock; use that stock's own ink.
+
+(These Don'ts are for Ticket Stock, the light theme. The dark theme is Night Glass, below.)
+
+---
+
+# Night Glass (dark theme)
+
+**Creative North Star: "Control room at night."** A dark map fills the screen. Frosted-glass panels float over it. Routes glow as neon lines, buses are glowing dots that leave short light trails, ETAs ride on the markers, and alerts pull the camera in. Motion explains a change of state and is never there just for decoration.
+
+Live reference: `nightglass design/night-glass-reference.html` (loops 14 s) and the `.mp4` beside it. Values below are copied from it.
+
+## Theme policy
+
+`THEME_DEFAULTS` in `shared/theme/tokens.js` sets the theme for each app:
+
+| App | Default | Override |
+|---|---|---|
+| Admin panel | `dark` (Night Glass) | none |
+| Driver app | `dark` (replaces the old night stock) | none |
+| Passenger app | `system` | Settings → Theme: Light / Dark / System |
+
+The light theme stays Ticket Stock, because passengers use the app in direct sunlight. Change a value there (`'dark' | 'light' | 'system'`) to change the policy.
+
+## Principles
+
+1. **Glass over a dark map.** UI floats as glass panels. The map is the ground.
+2. **Neon means data.** Route and status colour only. Text stays `text.primary/secondary/muted`.
+3. **Red means help.** Alert `#FF4D6D` is used only for SOS, panic and critical flags. Delays are amber; off-route and signal-lost are pink.
+4. **Motion explains state.** Things slide in when they arrive, rings fill as distance shrinks, the camera flies to an SOS. Loops are limited to "live" indicators. They stop under reduced motion, and are never in a driver's eye line.
+5. **Readable first.** Glass must be tinted enough for WCAG AA (4.5:1 body, 3:1 large) over the busiest map.
+
+## Tokens (`glass`, `neon`, `glassMotion` in tokens.js)
+
+| Token | Value |
+|---|---|
+| bg.deep / bg.map / bg.raised | `#04060C` / `#0A0F1C` / `#0E1424` |
+| glass.fill / fillSolid | `rgba(22,30,52,.55)` / `rgba(22,30,52,.88)` (no-blur fallback) |
+| glass.border / highlight | `rgba(255,255,255,.13)` / `inset 0 1px 0 rgba(255,255,255,.08)` |
+| glass.shadow / blur / saturate | `0 20px 40px -18px rgba(0,0,0,.7)` / 18 px / 150% |
+| radius | panel 18 · card 16 · chip 12 · pill 999 |
+| text | primary `#EAF0FF` · secondary `#9AA6C7` · muted `#8B97B8` |
+| neon | cyan `#3EE6FF` · violet `#8B7CFF` · lime `#B6FF5C` · pink `#FF6BD6` · amber `#FFC857` · alert `#FF4D6D` |
+| gradients | accent 135° cyan→violet · progress 90° violet→cyan · ring violet→lime |
+| aurora | `#2B3BFF`, `#7A2BFF`, `#0FB5C9`, blur 90 px, opacity .35–.55, 14 s drift |
+| motion | easeOut `[0.16,1,0.3,1]` · spring `{damping 14, stiffness 180}` · fast 180 · base 280 · slow 420 · markerGlide 1000 |
+
+**Route colours.** `neonForRoute(route)` maps each route's ticket stock to a neon colour: mint→lime, buff→amber, sky→cyan, rose→pink, lilac→violet. A route therefore keeps the same identity in both themes.
+
+**Status.** live/on time → lime, delayed → amber `#FFC857`, off-route/signal lost → pink, emergency → alert (`statusNeon`).
+
+**Type.** Anek stays the family for all body and UI text, because it covers the Indic scripts. Space Grotesk and JetBrains Mono may be used only for Latin-only numerals, codes and tracked labels (bus numbers, plates, timestamps, KPIs).
+
+## Components
+
+- **Glass panel** (`.glass` on web, `<Glass>` on native): fill, 1 px border, top highlight, shadow, `backdrop-filter: blur(18px) saturate(150%)`. It falls back to `fillSolid` when backdrop-filter is unsupported, on Android below API 31, when "Reduce effects" is on, and over the map webview (see the blur note).
+- **Neon route line:** a glow layer (width 8, blur 6, opacity .75), a core layer (3.5, neon) and a white flow layer (dash animation). Flow stops under reduced motion and when the tab is hidden. It is off in the driver app.
+- **Bus marker:** a neon dot with a white core and a pulsing ring, plus a 12-point light trail (`line-gradient`, transparent → route colour) and the 1000 ms glide.
+- **ETA chip:** a glass pill `12 · 4 min` with a pointer, anchored above the bus. Lower-priority chips are hidden when chips collide.
+- **Buttons:** primary has the accent gradient fill with `#04060C` text. Secondary is glass. Danger is alert-red fill and is used only for emergency actions.
+- **Route badge:** route number on its neon colour with `#04060C` text, 8 px corners.
+- **Status chip:** neon text with a neon hairline on glass, unrotated. It replaces the rubber stamp in the dark theme.
+- **Progress ring (driver):** 220 px with a violet→lime stroke. It completes on arrival and an 18-particle burst plays once.
+- **Admin dock:** a floating vertical glass icon dock with tooltip labels. The active item has a gradient pill that slides between items (`layoutId`).
+
+## Blur over the map
+
+Both apps draw the map in an Expo DOM component, which is a WebView on phones. On Android, `BlurView` blurs only what is inside a `BlurTargetView`, and a WebView's GPU surface is not captured reliably, so the result is blank or stale. **Panels that float over the map therefore use the solid fallback (`fillSolid`) on native** (`<Glass overMap>`). Real blur is used everywhere else. On web the map is in the same document, so CSS `backdrop-filter` works and was verified there. The native result has not been checked on a physical device yet. If blur over the map turns out to work, remove `overMap` from those panels.
+
+## Do / Don't
+
+- **Do** float every control over the map as glass, and keep text on glass at AA or better.
+- **Do** use the neon twin of a route's stock (`neonForRoute`), never an arbitrary colour.
+- **Do** make every loop (flow, pulse, aurora, blink) stop under `prefers-reduced-motion` / `useReducedMotion()`.
+- **Don't** use alert red for anything that isn't an emergency.
+- **Don't** animate decoration on the driver screen. Only the progress ring, arrival confirmation and alerts may move. Tap targets are ≥ 56 px.
+- **Don't** put Space Grotesk / JetBrains Mono on translated text.
+- **Don't** stack glass on glass more than one level deep, because the contrast gets muddy.

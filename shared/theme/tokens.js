@@ -96,3 +96,68 @@ export function stockForKey(key = '') {
 }
 
 export const routeStock = (route) => (route?.color ? stockForColor(route.color) : stockForKey(route?.number));
+
+// ─── Night Glass (the dark theme of the whole product) ────────────────────────────────────────
+// Frosted panels over a dark map, neon routes. See DESIGN.md › Night Glass.
+
+/**
+ * Theme policy, one place: 'dark' | 'light' | 'system'. The passenger app lets riders override
+ * it in Settings (Light / Dark / System); the admin and driver app always use their default.
+ */
+export const THEME_DEFAULTS = {
+  admin: 'dark',
+  driver: 'dark',
+  passenger: 'system'
+};
+
+export const glass = {
+  bg: { deep: '#04060C', map: '#0A0F1C', raised: '#0E1424' },
+  fill: 'rgba(22,30,52,.55)',
+  fillSolid: 'rgba(22,30,52,.88)', // no-blur fallback (old Android, "Reduce effects", over the map webview)
+  border: 'rgba(255,255,255,.13)',
+  highlight: 'inset 0 1px 0 rgba(255,255,255,.08)',
+  shadow: '0 20px 40px -18px rgba(0,0,0,.7)',
+  blur: 18,
+  saturate: '150%',
+  radius: { panel: 18, pill: 999, card: 16, chip: 12 },
+  text: { primary: '#EAF0FF', secondary: '#9AA6C7', muted: '#8B97B8' },
+  gradient: {
+    accent: 'linear-gradient(135deg, #3EE6FF, #8B7CFF)',
+    progress: 'linear-gradient(90deg, #8B7CFF, #3EE6FF)',
+    ring: ['#8B7CFF', '#B6FF5C']
+  },
+  aurora: { colors: ['#2B3BFF', '#7A2BFF', '#0FB5C9'], blur: 90, opacity: [0.35, 0.55], drift: 14000 }
+};
+
+export const neon = {
+  cyan: '#3EE6FF',
+  violet: '#8B7CFF',
+  lime: '#B6FF5C',
+  pink: '#FF6BD6',
+  amber: '#FFC857',
+  alert: '#FF4D6D' // emergencies only: SOS, panic, critical flags
+};
+
+export const glassMotion = {
+  ...motion,
+  spring: { damping: 14, stiffness: 180 }
+};
+
+// Each ticket stock has a neon twin, so a route keeps one stable identity in both themes.
+const NEON_FOR_STOCK = { mint: neon.lime, buff: neon.amber, sky: neon.cyan, rose: neon.pink, lilac: neon.violet };
+const stockName = (s) => Object.keys(stocks).find((k) => stocks[k] === s) || 'mint';
+
+/** Neon colour of a route (same mapping as routeStock, so colours never change between themes). */
+export const neonForRoute = (route) => NEON_FOR_STOCK[stockName(routeStock(route))];
+export const neonForStock = (stock) => NEON_FOR_STOCK[stockName(stock)];
+
+/** Live status → neon. */
+export const statusNeon = {
+  live: neon.lime,
+  onTime: neon.lime,
+  delayed: neon.amber,
+  offRoute: neon.pink,
+  signalLost: neon.pink,
+  stale: neon.pink,
+  emergency: neon.alert
+};
