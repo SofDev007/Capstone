@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Phone, History } from 'lucide-react';
-import { routeStock } from '@shared/theme/tokens.js';
+import { routeStock, neonForRoute } from '@shared/theme/tokens.js';
 import { useFleet } from '@/lib/useFleet';
 import { locationAPI } from '@/lib/api';
 import MapView from '@/components/MapView';
@@ -63,16 +63,16 @@ export default function LiveMap() {
 
   const focusRouteId = selected?.route?._id || routeFilter;
   const mapRoutes = useMemo(() => Object.values(routes).map((r) => ({
-    id: r._id, coordinates: r.path, color: routeStock(r).ink,
+    id: r._id, coordinates: r.path, color: neonForRoute(r),
     highlighted: r._id === focusRouteId, dimmed: Boolean(focusRouteId) && r._id !== focusRouteId
   })), [routes, focusRouteId]);
   const mapStops = useMemo(() => {
     const r = routes[focusRouteId];
-    return r ? r.stops.map((s) => ({ ...s, color: routeStock(r).ink, highlighted: s.id === selected?.live?.nextStop?.id })) : [];
+    return r ? r.stops.map((s) => ({ ...s, color: neonForRoute(r), highlighted: s.id === selected?.live?.nextStop?.id })) : [];
   }, [routes, focusRouteId, selected]);
   const mapBuses = useMemo(() => visible.filter((b) => b.live?.location).map((b) => ({
     id: b._id, lat: b.live.location.lat, lng: b.live.location.lng, label: b.busNumber,
-    color: routeStock(b.route).stock, selected: b._id === selectedId,
+    color: neonForRoute(b.route), selected: b._id === selectedId,
     alert: b.status === 'breakdown', stale: ageSeconds(b.live.lastUpdate) > 60
   })), [visible, selectedId]);
 

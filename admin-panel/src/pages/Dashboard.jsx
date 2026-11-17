@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-import { routeStock } from '@shared/theme/tokens.js';
+import { neonForRoute } from '@shared/theme/tokens.js';
 import { useRealtime, useRealtimeEvents, incidentTitle, incidentSubtitle } from '@/lib/realtime';
 import { useFleet } from '@/lib/useFleet';
 import { incidentAPI } from '@/lib/api';
@@ -54,10 +54,10 @@ export default function Dashboard() {
   useEffect(() => { loadIncidents(); }, []);
   useRealtimeEvents((event) => { if (event.startsWith('incident:')) loadIncidents(); });
 
-  const mapRoutes = useMemo(() => Object.values(routes).map((r) => ({ id: r._id, coordinates: r.path, color: routeStock(r).ink })), [routes]);
+  const mapRoutes = useMemo(() => Object.values(routes).map((r) => ({ id: r._id, coordinates: r.path, color: neonForRoute(r) })), [routes]);
   const mapBuses = useMemo(() => fleet.filter((b) => b.live?.location).map((b) => ({
     id: b._id, lat: b.live.location.lat, lng: b.live.location.lng, label: b.busNumber,
-    color: routeStock(b.route).stock, alert: b.status === 'breakdown', stale: ageSeconds(b.live.lastUpdate) > 60
+    color: neonForRoute(b.route), alert: b.status === 'breakdown', stale: ageSeconds(b.live.lastUpdate) > 60
   })), [fleet]);
   const fitKey = `${mapRoutes.length}`;
 

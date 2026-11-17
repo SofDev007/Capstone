@@ -2,6 +2,8 @@
 // OpenFreeMap: free, no API key, no usage limits, OpenStreetMap data, vector tiles.
 // For a public launch in India, consider Ola Maps or Mappls (official boundaries) — change the style URL here.
 export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/positron';
+// Night Glass: OpenFreeMap "dark" (a Dark Matter fork), recoloured after load by applyNightGlassStyle (neonMap.js).
+export const MAP_STYLE_DARK_URL = 'https://tiles.openfreemap.org/styles/dark';
 export const MAP_ATTRIBUTION = '© OpenStreetMap contributors · OpenFreeMap';
 
 // Whole-India view used when we know nothing better (no GPS, no buses).
