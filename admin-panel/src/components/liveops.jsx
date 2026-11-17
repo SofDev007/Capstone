@@ -138,13 +138,13 @@ export function SosOverlay({ sos, point, driverPhone, onTrail, onDismiss }) {
     { key: 'trail', label: 'Show trail', short: 'TRAIL', icon: History, onClick: onTrail }
   ];
   return (
+    // AnimatePresence needs its keyed children directly (not inside a Fragment), or exits never finish.
     <AnimatePresence>
-      {sos && (
-        <>
+      {sos && [
           <motion.div key={`toast-${sos.incident._id}`} role="alert"
             className="glass absolute left-[90px] bottom-[84px] w-[380px] px-4 py-3.5 z-20 !border-signal/60 !bg-[rgba(60,10,22,.7)]"
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: 90, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: reduce ? 0 : 40 }} transition={reduce ? { duration: 0.2 } : { type: 'spring', damping: 14, stiffness: 180 }}>
+            exit={{ opacity: 0, y: reduce ? 0 : 40, transition: { duration: 0.2 } }} transition={reduce ? { duration: 0.2 } : { type: 'spring', damping: 14, stiffness: 180 }}>
             <button type="button" onClick={onDismiss} className="absolute top-2.5 right-2.5 p-1.5 rounded-lg hover:bg-white/10" aria-label="Dismiss and return the camera">
               <X size={16} />
             </button>
@@ -152,8 +152,8 @@ export function SosOverlay({ sos, point, driverPhone, onTrail, onDismiss }) {
             <div className="text-[17px] font-bold mt-1.5">{incidentTitle(sos.incident)}</div>
             <div className="text-[13px] text-[#E3B9C3] mt-0.5">{incidentSubtitle(sos.incident) || 'Location shared with the control room'}</div>
             <a href={`/alerts?id=${sos.incident._id}`} className="inline-block mt-2 text-[13px] font-semibold underline underline-offset-4">Open in alerts</a>
-          </motion.div>
-          {point && actions.map((a, i) => {
+          </motion.div>,
+          ...(!point ? [] : actions.map((a, i) => {
             const angle = ((-150 + i * 55) * Math.PI) / 180;
             const x = Math.cos(angle) * 84;
             const y = Math.sin(angle) * 84;
@@ -161,7 +161,7 @@ export function SosOverlay({ sos, point, driverPhone, onTrail, onDismiss }) {
             const disabled = !a.href && !a.onClick;
             return (
               <motion.div key={`${a.key}-${sos.incident._id}`} className="absolute z-20" style={{ left: point.x, top: point.y }}
-                initial={{ x: 0, y: 0, scale: 0.3, opacity: 0 }} animate={{ x, y, scale: 1, opacity: 1 }} exit={{ x: 0, y: 0, scale: 0.3, opacity: 0 }}
+                initial={{ x: 0, y: 0, scale: 0.3, opacity: 0 }} animate={{ x, y, scale: 1, opacity: 1 }} exit={{ x: 0, y: 0, scale: 0.3, opacity: 0, transition: { duration: 0.2 } }}
                 transition={reduce ? { duration: 0.15 } : { type: 'spring', damping: 12, stiffness: 200, delay: 0.4 + i * 0.12 }}>
                 <Tag {...(a.href ? { href: a.href } : { type: 'button', onClick: a.onClick, disabled })} aria-label={a.label} title={a.label}
                   className={cn('glass !rounded-full -ml-[26px] -mt-[26px] w-[52px] h-[52px] grid place-items-center text-[10.5px] font-bold font-mono hover:scale-105 transition-transform',
@@ -170,9 +170,8 @@ export function SosOverlay({ sos, point, driverPhone, onTrail, onDismiss }) {
                 </Tag>
               </motion.div>
             );
-          })}
-        </>
-      )}
+          }))
+      ]}
     </AnimatePresence>
   );
 }

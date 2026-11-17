@@ -62,7 +62,7 @@ export default function SlideToConfirm({ label, onConfirm, tone = 'primary', loa
 
 const styles = StyleSheet.create({
   track: { height: KNOB + 8, borderRadius: 10, padding: 4, justifyContent: 'center' },
-  labelWrap: { alignItems: 'center', justifyContent: 'center', paddingLeft: KNOB },
+  labelWrap: { alignItems: 'center', justifyContent: 'center', paddingLeft: KNOB + 14, paddingRight: 12 }, // long Indic labels wrap clear of the knob
   knob: { width: KNOB, height: KNOB, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   glass: { borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,.13)', borderTopColor: 'rgba(255,255,255,.2)', overflow: 'hidden' },
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 18, overflow: 'hidden', opacity: 0.55 }
