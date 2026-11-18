@@ -18,8 +18,10 @@ import { matchScheduledDeparture } from './schedule.js';
 import { isDriverAllowed } from '../middleware/auth.js';
 
 export const CONFIG = {
-  defaultSpeed: 5, // m/s (~18 km/h) until we have measurements
+  defaultSpeed: 5, // m/s (~18 km/h): ETA speed until we have measurements (never shown as the bus's speed)
   minEtaSpeed: 3, // m/s floor so a bus waiting at a light doesn't show "ETA: 2 hours"
+  speedFreshMs: 15 * 1000, // no new GPS fix for this long = standing still (phones only report after moving ~5-10 m)
+  jitterSpeed: 1, // m/s: measured speeds below this are GPS jitter on a parked bus
   offRouteMeters: 150,
   offRouteMs: 2 * 60 * 1000,
   signalLostMs: 60 * 1000,
@@ -105,9 +107,11 @@ function newState({ trip, busId, busNumber, route, position, lastPingAt }) {
     startTime: trip.startTime,
     scheduledDeparture: trip.scheduledDeparture || null,
     position: position || null,
-    speed: CONFIG.defaultSpeed,
+    speed: 0, // m/s, latest measured/reported speed (what drivers, passengers and admins see)
+    etaSpeed: CONFIG.defaultSpeed, // m/s, smoothed, for ETAs
     heading: 0,
-    lastPingAt,
+    lastPingAt, // when the last live ping ARRIVED: liveness (signal-lost watchdog), ordering
+    lastFixAt: lastPingAt, // when the last GPS fix was TAKEN: speed and distance
     lastHistoryAt: 0,
     lastHistoryPos: null,
     along: 0,
@@ -217,7 +221,7 @@ function updateProgress(state, now) {
     }
   }
 
-  const speed = Math.max(state.speed, CONFIG.minEtaSpeed);
+  const speed = Math.max(state.etaSpeed, CONFIG.minEtaSpeed);
   const next = route.stops.findIndex((s) => s.along > state.along + CONFIG.stopPassedMeters);
   state.nextStopIndex = next === -1 ? route.stops.length : next;
   state.etas = route.stops.slice(state.nextStopIndex).map((s) => ({
@@ -244,7 +248,7 @@ export function busView(state) {
     routeId: state.routeId,
     routeNumber: route?.number ?? null,
     location: state.position ? { ...state.position, timestamp: new Date(state.lastPingAt) } : null,
-    speed: Math.round(state.speed * 3.6), // km/h
+    speed: Math.round((Date.now() - state.lastFixAt > CONFIG.speedFreshMs ? 0 : state.speed) * 3.6), // km/h
     heading: state.heading,
     nextStop: nextStop ? { id: nextStop.id, name: nextStop.name, etaMinutes: state.etas[0]?.minutes ?? null } : null,
     etas: state.etas,
@@ -257,20 +261,32 @@ export function busView(state) {
 /**
  * Record a GPS point. `live: false` is for late points flushed from the driver's offline queue:
  * they update history, distance and the latest known position, but are never broadcast as live.
+ * timestamp: when the point arrived (live) or was taken (queued). fixAt: when the phone took the
+ * GPS fix, if it says. speed: the phone's GPS speed in m/s, or null when the phone doesn't know.
  */
-export async function recordPing(state, { lat, lng, speed = 0, heading = 0, timestamp = Date.now() }, { live = true } = {}) {
+export async function recordPing(state, { lat, lng, speed = null, heading = 0, timestamp = Date.now(), fixAt }, { live = true } = {}) {
   const ts = new Date(timestamp).getTime();
+  const fixTime = Math.min(Number.isFinite(fixAt) ? fixAt : ts, Date.now()); // never in the future (clock skew)
   const point = { lat, lng };
 
   if (state.route === undefined) state.route = await getRoute(state.routeId);
 
-  // Distance + measured speed (GPS-reported speed is often 0/-1, so measure it ourselves).
-  if (state.position && ts > state.lastPingAt) {
+  // Speed: the phone's GPS speed when it reports one (Doppler: accurate, instant); otherwise distance /
+  // time between FIXES. Arrival times are distorted by network delay and by fixes sent in batches.
+  let sample = Number.isFinite(speed) && speed >= 0 ? Math.min(speed, 40) : null;
+  if (state.position && fixTime > state.lastFixAt) {
     const d = haversine(state.position, point);
-    const dt = (ts - state.lastPingAt) / 1000;
+    const dt = (fixTime - state.lastFixAt) / 1000;
     if (d / dt < 50) { // ignore GPS jumps faster than 180 km/h
       state.totalDistance += d;
-      if (dt >= 1) state.speed = 0.7 * state.speed + 0.3 * Math.min(d / dt, 25);
+      if (sample == null && dt >= 1) sample = d / dt < CONFIG.jitterSpeed ? 0 : Math.min(d / dt, 25);
+    }
+  }
+  if (fixTime > state.lastFixAt) {
+    state.lastFixAt = fixTime;
+    if (sample != null) {
+      state.speed = sample;
+      state.etaSpeed = 0.7 * state.etaSpeed + 0.3 * Math.min(sample, 25);
     }
   }
 
