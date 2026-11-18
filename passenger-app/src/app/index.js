@@ -11,10 +11,14 @@ import T from 'transit-shared/native/T';
 import { Ticket, RouteBadge, Stamp, Banner, Button } from 'transit-shared/native/ui';
 import PanicButton from 'transit-shared/native/PanicButton';
 import PanicSheet from 'transit-shared/native/PanicSheet';
-import { useTheme, routeStock, stocks } from 'transit-shared/native/theme';
+import { useTheme, routeStock, stocks, stockInk } from 'transit-shared/native/theme';
+import { neonForRoute, neon } from 'transit-shared/theme/tokens.js';
+import Glass from 'transit-shared/native/Glass';
+import { useReducedMotion } from 'react-native-reanimated';
 import PassengerMap from '../components/PassengerMap';
 import BottomSheet from '../components/BottomSheet';
-import { JourneyTicket, LegList, Row } from '../components/Journey';
+import LivePill from '../components/LivePill';
+import { JourneyTicket, JourneyCarousel, LegList, Row } from '../components/Journey';
 import { useLive } from '../lib/live';
 import { useAuth } from '../lib/auth';
 import { usePosition } from '../lib/position';
@@ -29,18 +33,18 @@ function SearchTicket({ fromLabel, toLabel, hasTo, onFrom, onTo, onSwap, onClear
   const { t } = useTranslation();
   const theme = useTheme();
   return (
-    <View style={[styles.searchTicket, { backgroundColor: theme.surface, borderColor: theme.rule }]}>
+    <Glass overMap radius={18} style={[styles.searchTicket, !theme.night && { borderRadius: 10 }]}>
       <View style={{ flex: 1 }}>
         <Pressable onPress={onFrom} style={styles.searchRow} accessibilityRole="button" accessibilityLabel={`${t('passenger.from')}: ${fromLabel}`}>
-          <View style={[styles.dot, { backgroundColor: '#1D4F8F' }]} />
+          <View style={[styles.dot, { backgroundColor: theme.night ? neon.cyan : '#1D4F8F' }]} />
           <View style={{ flex: 1 }}>
             <T variant="label" color={theme.inkFaint}>{t('passenger.from')}</T>
             <T variant="bodyStrong" numberOfLines={1}>{fromLabel}</T>
           </View>
         </Pressable>
-        <View style={{ height: 0, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: theme.rule, marginLeft: 26 }} />
+        <View style={{ height: 0, borderTopWidth: theme.night ? 1 : 1.5, borderStyle: theme.night ? 'solid' : 'dashed', borderColor: theme.rule, marginLeft: 26 }} />
         <Pressable onPress={onTo} style={styles.searchRow} accessibilityRole="button" accessibilityLabel={t('passenger.to')}>
-          <View style={[styles.dot, { backgroundColor: '#A3184A', borderRadius: 2 }]} />
+          <View style={[styles.dot, { backgroundColor: theme.night ? neon.pink : '#A3184A', borderRadius: 2 }]} />
           <View style={{ flex: 1 }}>
             {hasTo ? <T variant="label" color={theme.inkFaint}>{t('passenger.chooseTo')}</T> : null}
             <T variant={hasTo ? 'bodyStrong' : 'title'} color={hasTo ? theme.ink : theme.inkSoft} numberOfLines={1}>{hasTo ? toLabel : t('passenger.to')}</T>
@@ -57,7 +61,19 @@ function SearchTicket({ fromLabel, toLabel, hasTo, onFrom, onTo, onSwap, onClear
           </Pressable>
         )}
       </View>
-    </View>
+    </Glass>
+  );
+}
+
+/** Round floating button (glass in Night Glass). */
+function Fab({ icon, label, onPress, active }) {
+  const theme = useTheme();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} accessibilityState={active != null ? { selected: active } : undefined} hitSlop={4}>
+      <Glass overMap radius={24} style={styles.fab}>
+        <Ionicons name={icon} size={21} color={active ? (theme.night ? neon.cyan : theme.ink) : theme.ink} />
+      </Glass>
+    </Pressable>
   );
 }
 
@@ -97,6 +113,13 @@ export default function Home() {
   const [notice, setNotice] = useState('');
   const [panic, setPanic] = useState({ incident: null, error: false, at: 0 });
   const [busRoute, setBusRoute] = useState(null);
+  const reduceMotion = useReducedMotion();
+  const [locateKey, setLocateKey] = useState(0);
+  const [showAll, setShowAll] = useState(true); // layers FAB: all live buses vs only the ones for this trip/stop
+  const [sheetScrolled, setSheetScrolled] = useState(false);
+  const [topH, setTopH] = useState(0);
+  const lineColor = (route) => (theme.night ? neonForRoute(route) : routeStock(route).ink);
+  const pillStart = useRef({}); // minutes when tracking started, for the progress bar
 
   const buses = useMemo(() => Object.values(liveMap).filter((b) => b.location), [liveMap]);
   const routeColor = useMemo(() => Object.fromEntries(routes.map((r) => [r._id, r.color])), [routes]);
@@ -130,13 +153,13 @@ export default function Home() {
     let alive = true;
     if (!option) { setLegPaths([]); return undefined; }
     Promise.all(option.legs.map(async (leg) => {
-      if (leg.type === 'walk') return { coordinates: [[leg.from.lng, leg.from.lat], [leg.to.lng, leg.to.lat]], color: '#1D4F8F', dashed: true };
+      if (leg.type === 'walk') return { coordinates: [[leg.from.lng, leg.from.lat], [leg.to.lng, leg.to.lat]], color: theme.night ? neon.cyan : '#1D4F8F', dashed: true };
       const route = await getRoute(leg.route.id).catch(() => null);
       const coords = route?.path?.length > 1 ? slicePath(route.path, leg.from, leg.to) : [[leg.from.lng, leg.from.lat], [leg.to.lng, leg.to.lat]];
-      return { coordinates: coords, color: routeStock(leg.route).ink, width: 6 };
+      return { coordinates: coords, color: lineColor(leg.route), width: 6 };
     })).then((paths) => alive && setLegPaths(paths));
     return () => { alive = false; };
-  }, [option, getRoute]);
+  }, [option, getRoute, theme.night]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Selected bus: its route for the stops-ahead list.
   const bus = busId ? liveMap[busId] : null;
@@ -147,15 +170,23 @@ export default function Home() {
 
   // ---------- Map data ----------
   const optionRoutes = new Set(option?.legs.filter((l) => l.type === 'ride').map((l) => l.route.id));
-  const mapBuses = buses.map((b) => ({
-    id: b.busId, lat: b.location.lat, lng: b.location.lng, label: b.busNumber,
-    stock: routeStock(busRouteObj(b)).stock, selected: b.busId === busId,
-    dim: (option && !optionRoutes.has(b.routeId)) || ageSec(b.lastUpdate) > 120
-  }));
+  // ETA chips: buses relevant to the selected journey (their boarding stop) or to the nearest stop.
+  const chipStopId = option?.legs.find((l) => l.type === 'ride')?.from.id || nearest[0]?.id;
+  const mapBuses = buses.map((b) => {
+    const eta = chipStopId ? b.etas?.find((e) => e.stopId === chipStopId) : null;
+    const relevant = option ? optionRoutes.has(b.routeId) : Boolean(eta);
+    return {
+      id: b.busId, lat: b.location.lat, lng: b.location.lng, label: b.busNumber, relevant,
+      stock: routeStock(busRouteObj(b)).stock, color: neonForRoute(busRouteObj(b)), selected: b.busId === busId,
+      dim: (option && !optionRoutes.has(b.routeId)) || ageSec(b.lastUpdate) > 120,
+      chip: eta && relevant ? { route: b.routeNumber ?? b.busNumber, text: t('common.minutes', { count: Math.max(0, eta.minutes) }), priority: eta.minutes } : null
+    };
+  }).filter((b) => showAll || b.relevant || b.selected);
+  const stopInk = theme.night ? '#EAF0FF' : '#16213E';
   const mapStops = option
-    ? option.legs.filter((l) => l.type === 'ride').flatMap((l) => [l.from, l.to]).map((s) => ({ ...s, color: '#16213E', big: true }))
-    : nearest.map((s, i) => ({ id: s.id, lat: s.lat, lng: s.lng, name: s.name, color: '#16213E', big: i === 0 }));
-  const busLines = busRoute?.path?.length > 1 ? [{ coordinates: busRoute.path, color: routeStock(busRoute).ink, width: 5 }] : [];
+    ? option.legs.filter((l) => l.type === 'ride').flatMap((l) => [l.from, l.to]).map((s) => ({ ...s, color: stopInk, big: true }))
+    : nearest.map((s, i) => ({ id: s.id, lat: s.lat, lng: s.lng, name: s.name, color: stopInk, big: i === 0 }));
+  const busLines = busRoute?.path?.length > 1 ? [{ coordinates: busRoute.path, color: lineColor(busRoute), width: 5 }] : [];
   // Refit when the plan changes (and once buses first appear, if we know nothing else yet).
   const fitKey = `${fromKey}|${toKey}|${selected}|${busId}|${nearest[0]?.id || ''}|${legPaths.length}|${!from && buses.length > 0}`;
 
@@ -164,6 +195,10 @@ export default function Home() {
   const topPad = insets.top + 150;
   const room = screenH - topPad - sheetH;
   const mapPadding = room > 120 ? { top: topPad, bottom: sheetH + 20, left: 40, right: 40 } : { top: 40, bottom: 40, left: 30, right: 30 };
+  // Floating controls need ~210 px between the top controls and the sheet.
+  // Matches BottomSheet's geometry: its top edge sits at heights.full - heights[snap].
+  const sheetTop = Math.round(screenH * 0.9) - (snap === 'peek' ? 168 + insets.bottom : snap === 'half' ? Math.round(screenH * 0.48) : Math.round(screenH * 0.9));
+  const fabRoom = snap !== 'full' && sheetTop - Math.max(topH, insets.top + 120) > 210;
 
   // ---------- Panic ----------
   const nearbyBuses = position ? buses.filter((b) => haversine(position, b.location) < 300).sort((a, b) => haversine(position, a.location) - haversine(position, b.location)) : [];
@@ -202,6 +237,20 @@ export default function Home() {
       setNotice(errorText(e, t));
     }
   };
+
+  // ---------- Live arrival pill (while tracking a bus) ----------
+  useEffect(() => { setSheetScrolled(false); }, [busId]);
+  let pill = null;
+  if (bus) {
+    const atMine = nearest[0] && bus.etas?.find((e) => e.stopId === nearest[0].id);
+    const stopName = atMine ? nearest[0].name : bus.nextStop?.name;
+    const minutes = atMine ? atMine.minutes : bus.nextStop?.etaMinutes;
+    if (stopName) {
+      const key = `${bus.busId}|${stopName}`;
+      if (minutes != null && !pillStart.current[key]) pillStart.current[key] = Math.max(1, minutes);
+      pill = { route: busRouteObj(bus), busNumber: bus.busNumber, stopName, minutes, progress: minutes == null ? 0 : Math.max(0, 1 - minutes / pillStart.current[key]) };
+    }
+  }
 
   // ---------- Sheet content ----------
   const nearestStop = nearest[0];
@@ -270,7 +319,9 @@ export default function Home() {
         <View style={{ gap: 12 }}>
           {journey.error ? <Banner tone="danger">{journey.error}</Banner> : null}
           {journey.options?.length === 0 && !journey.error && <Banner tone="info">{t('passenger.noRoute')}</Banner>}
-          {journey.options?.map((o, i) => <JourneyTicket key={i} option={o} best={i === 0} onPress={() => { setSelected(i); setSnap('half'); }} />)}
+          {theme.night && journey.options?.length > 0
+            ? <JourneyCarousel options={journey.options} destination={trip.to.name} onSelect={(i) => { setSelected(i); setSnap('half'); }} />
+            : journey.options?.map((o, i) => <JourneyTicket key={i} option={o} best={i === 0} onPress={() => { setSelected(i); setSnap('half'); }} />)}
         </View>
       );
     }
@@ -287,7 +338,7 @@ export default function Home() {
           <Ticket
             stubStock={stocks.sky}
             notchColor={theme.surface}
-            stub={<View style={{ alignItems: 'center' }}><Ionicons name="walk" size={22} color={stocks.sky.ink} /><T variant="bodyStrong" color={stocks.sky.ink}>{t('common.minutes', { count: Math.max(1, nearestStop.walkMinutes) })}</T></View>}
+            stub={<View style={{ alignItems: 'center' }}><Ionicons name="walk" size={22} color={stockInk(stocks.sky, theme)} /><T variant="bodyStrong" color={stockInk(stocks.sky, theme)}>{t('common.minutes', { count: Math.max(1, nearestStop.walkMinutes) })}</T></View>}
           >
             <T variant="label" color={theme.inkFaint}>{t('passenger.nearestStop')}</T>
             <T variant="title" style={{ marginTop: 2 }}>{nearestStop.name}</T>
@@ -323,14 +374,21 @@ export default function Home() {
           from={trip.from}
           to={trip.to}
           fitKey={fitKey}
+          locateKey={locateKey}
           padding={mapPadding}
           night={theme.night}
+          reduceMotion={reduceMotion}
           onBusPress={async (id) => { setBusId(id); setSnap('half'); }}
           dom={{ style: { flex: 1 } }}
         />
       </View>
 
-      <View style={[styles.top, { paddingTop: insets.top + 10 }]} pointerEvents="box-none">
+      <View style={[styles.top, { paddingTop: insets.top + 8 }]} pointerEvents="box-none" onLayout={(e) => setTopH(e.nativeEvent.layout.height)}>
+        {pill && (
+          <View style={{ marginBottom: 10 }}>
+            <LivePill {...pill} compact={snap === 'full' || sheetScrolled} onPress={() => { setSnap('half'); setSheetScrolled(false); }} />
+          </View>
+        )}
         <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
           <View style={{ flex: 1 }}>
             <SearchTicket
@@ -343,8 +401,10 @@ export default function Home() {
               onClear={() => { tripStore.set({ to: null }); setBusId(null); }}
             />
           </View>
-          <Pressable onPress={() => router.push('/settings')} style={[styles.roundBtn, { backgroundColor: theme.surface, borderColor: theme.rule }]} accessibilityLabel={t('common.settings')}>
-            <Ionicons name={user ? 'person' : 'person-outline'} size={22} color={theme.ink} />
+          <Pressable onPress={() => router.push('/settings')} accessibilityLabel={t('common.settings')}>
+            <Glass overMap radius={24} style={styles.roundBtn}>
+              <Ionicons name={user ? 'person' : 'person-outline'} size={22} color={theme.ink} />
+            </Glass>
           </Pressable>
         </View>
         {alert && (
@@ -353,10 +413,14 @@ export default function Home() {
         {notice ? <Pressable onPress={() => setNotice('')} style={{ marginTop: 10 }}><Banner tone="info">{notice}</Banner></Pressable> : null}
       </View>
 
-      <BottomSheet snap={snap} onSnapChange={setSnap} header={header}>{body}</BottomSheet>
+      <BottomSheet snap={snap} onSnapChange={setSnap} onScrolled={setSheetScrolled} header={header}>{body}</BottomSheet>
 
-      <View style={[styles.sos, { bottom: insets.bottom + 18 }]} pointerEvents="box-none">
-        <PanicButton onTrigger={sendPanic} size={60} />
+      {/* Floating controls: locate, layers, SOS (rendered after the sheet so SOS is always reachable) */}
+      {/* The stack sits on the sheet's top edge; with the sheet full (or no room), only SOS stays, bottom-right. */}
+      <View style={[styles.fabs, fabRoom ? { bottom: screenH - sheetTop + 8 } : { bottom: insets.bottom + 18 }]} pointerEvents="box-none">
+        {fabRoom && position && <Fab icon="locate" label={t('passenger.locateMe')} onPress={() => setLocateKey((k) => k + 1)} />}
+        {fabRoom && <Fab icon="layers-outline" label={showAll ? t('passenger.showTripBuses') : t('passenger.showAllBuses')} active={!showAll} onPress={() => setShowAll((s) => !s)} />}
+        <PanicButton onTrigger={sendPanic} size={52} />
       </View>
 
       <PanicSheet
@@ -387,12 +451,13 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   top: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 14 },
-  searchTicket: { flexDirection: 'row', borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 4, shadowColor: '#16213E', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  searchTicket: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 4, shadowColor: '#16213E', shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 8, minHeight: 52 },
   dot: { width: 12, height: 12, borderRadius: 6 },
   iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  roundBtn: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#16213E', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
+  roundBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  fab: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  fabs: { position: 'absolute', right: 14, alignItems: 'center', gap: 10 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 6 },
-  holeSm: { width: 14, height: 14, borderRadius: 7 },
-  sos: { position: 'absolute', right: 14 }
+  holeSm: { width: 14, height: 14, borderRadius: 7 }
 });

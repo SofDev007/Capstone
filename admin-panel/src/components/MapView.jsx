@@ -1,11 +1,16 @@
-// MapLibre map on OpenFreeMap vector tiles. Routes and stops are GeoJSON layers; buses and incidents
-// are HTML markers. Bus markers glide between GPS points (1 s) instead of jumping.
+// Night Glass map (MapLibre, OpenFreeMap "dark" recoloured). Routes are neon GeoJSON lines (glow +
+// core + animated flow); buses are neon HTML markers that glide between GPS points (1 s) and leave a
+// light trail; optional ETA chips float above them at zoom ≥ chipMinZoom.
 import { useEffect, useRef } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MAP_STYLE_URL, INDIA_VIEW } from '@shared/mapConfig.js';
-import { colors } from '@shared/theme/tokens.js';
+import { MAP_STYLE_DARK_URL, INDIA_VIEW } from '@shared/mapConfig.js';
+import { neon, glass } from '@shared/theme/tokens.js';
+import {
+  applyNightGlassStyle, addNeonRouteLayers, animateFlow, injectNeonMapCss, createBusMarkerEl, updateBusMarkerEl,
+  glideMarker, createTrails, watchChips, prefersReducedMotion
+} from '@shared/neonMap.js';
 import { cn } from '@/lib/utils';
 
 // MapLibre 6 runs tile parsing in a module worker; point it at the bundled file explicitly
@@ -14,13 +19,12 @@ maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
 const GLIDE_MS = 1000;
-const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const routesGeoJSON = (routes = []) => ({
   type: 'FeatureCollection',
   features: routes.filter((r) => r.coordinates?.length >= 2).map((r) => ({
     type: 'Feature',
-    properties: { id: r.id, color: r.color || colors.ink, width: r.highlighted ? 6 : 4, opacity: r.dimmed ? 0.35 : 1 },
+    properties: { id: r.id, color: r.color || neon.cyan, width: r.highlighted ? 5 : 3.5, opacity: r.dimmed ? 0.3 : 1 },
     geometry: { type: 'LineString', coordinates: r.coordinates }
   }))
 });
@@ -29,69 +33,80 @@ const stopsGeoJSON = (stops = []) => ({
   type: 'FeatureCollection',
   features: stops.map((s) => ({
     type: 'Feature',
-    properties: { id: s.id, name: s.name, color: s.color || colors.ink, highlighted: Boolean(s.highlighted), label: s.label ?? '' },
+    properties: { id: s.id, name: s.name, color: s.color || glass.text.muted, highlighted: Boolean(s.highlighted), label: s.label ?? '' },
     geometry: { type: 'Point', coordinates: [s.lng, s.lat] }
   }))
 });
 
 function addLayers(map) {
+  applyNightGlassStyle(map);
   map.addSource('routes', { type: 'geojson', data: EMPTY });
   map.addSource('stops', { type: 'geojson', data: EMPTY });
   map.addSource('trail', { type: 'geojson', data: EMPTY });
-  map.addLayer({ id: 'routes-casing', type: 'line', source: 'routes', layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': colors.counterfoil, 'line-width': ['+', ['get', 'width'], 4], 'line-opacity': ['get', 'opacity'] } });
-  map.addLayer({ id: 'routes-line', type: 'line', source: 'routes', layout: { 'line-cap': 'round', 'line-join': 'round' },
-    paint: { 'line-color': ['get', 'color'], 'line-width': ['get', 'width'], 'line-opacity': ['get', 'opacity'] } });
+  const flow = addNeonRouteLayers(map, 'routes');
   map.addLayer({ id: 'trail-line', type: 'line', source: 'trail', layout: { 'line-cap': 'round' },
-    paint: { 'line-color': colors.signal, 'line-width': 3, 'line-dasharray': [1.5, 1.5] } });
-  // Stops are punch holes: counterfoil disc with a stock-ink ring.
+    paint: { 'line-color': neon.alert, 'line-width': 3, 'line-dasharray': [1.5, 1.5] } });
+  // Stops: dark dot with a neon ring.
   map.addLayer({ id: 'stops-circle', type: 'circle', source: 'stops',
     paint: {
-      'circle-radius': ['case', ['get', 'highlighted'], 8, 5.5],
-      'circle-color': colors.counterfoil,
+      'circle-radius': ['case', ['get', 'highlighted'], 7, 5],
+      'circle-color': glass.bg.raised,
       'circle-stroke-color': ['get', 'color'],
-      'circle-stroke-width': ['case', ['get', 'highlighted'], 3.5, 2.5]
+      'circle-stroke-width': ['case', ['get', 'highlighted'], 3, 2]
     } });
   map.addLayer({ id: 'stops-label', type: 'symbol', source: 'stops', minzoom: 12.5,
     layout: {
       'text-field': ['case', ['!=', ['get', 'label'], ''], ['get', 'label'], ['get', 'name']],
       'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true
     },
-    paint: { 'text-color': colors.ink, 'text-halo-color': colors.counterfoil, 'text-halo-width': 1.5 } });
+    paint: { 'text-color': glass.text.secondary, 'text-halo-color': glass.bg.deep, 'text-halo-width': 1.5 } });
+  return flow;
 }
 
 export default function MapView({
   routes, stops, buses = [], incidents = [], trail,
-  fitKey, fitPadding = 60, onBusClick, onStopClick, onMapClick, className, interactiveStops = true
+  fitKey, fitPadding = 60, onBusClick, onStopClick, onMapClick, onMap, className, interactiveStops = true, chipMinZoom = 14
 }) {
   const container = useRef(null);
   const mapRef = useRef(null);
   const loaded = useRef(false);
   const busMarkers = useRef(new Map());
   const incidentMarkers = useRef(new Map());
+  const trails = useRef(null);
   const handlers = useRef({});
   handlers.current = { onBusClick, onStopClick, onMapClick };
   const latest = useRef({});
-  latest.current = { routes, stops, trail };
+  latest.current = { routes, stops, trail, buses };
 
   // Create the map once.
   useEffect(() => {
+    injectNeonMapCss();
     const map = new maplibregl.Map({
       container: container.current,
-      style: MAP_STYLE_URL,
+      style: MAP_STYLE_DARK_URL,
       center: INDIA_VIEW.center,
       zoom: INDIA_VIEW.zoom,
       attributionControl: { compact: true }
     });
     mapRef.current = map;
+    onMap?.(map);
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+    let stopFlow = () => {};
+    let stopChips = () => {};
+    const zoomClass = () => container.current?.classList.toggle('chips-off', map.getZoom() < chipMinZoom);
+    map.on('zoom', zoomClass);
+    zoomClass();
     map.on('load', () => {
-      addLayers(map);
+      const flow = addLayers(map);
+      stopFlow = animateFlow(map, [flow]);
+      stopChips = watchChips(map);
+      trails.current = createTrails(map, { before: 'stops-circle' });
       loaded.current = true;
       const { routes: r, stops: s, trail: t } = latest.current;
       map.getSource('routes').setData(routesGeoJSON(r));
       map.getSource('stops').setData(stopsGeoJSON(s));
       map.getSource('trail').setData(t?.length > 1 ? { type: 'Feature', geometry: { type: 'LineString', coordinates: t } } : EMPTY);
+      for (const [id, e] of busMarkers.current) trails.current.push(id, e.pos, e.color);
       map.fire('data-ready');
     });
     map.on('click', (e) => {
@@ -108,12 +123,16 @@ export default function MapView({
     ro.observe(container.current);
     return () => {
       ro.disconnect();
+      stopFlow();
+      stopChips();
+      trails.current?.stop();
+      trails.current = null;
       map.remove();
       loaded.current = false;
       busMarkers.current.clear();
       incidentMarkers.current.clear();
     };
-  }, [interactiveStops]);
+  }, [interactiveStops]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // GeoJSON layers
   useEffect(() => {
@@ -128,7 +147,7 @@ export default function MapView({
     }
   }, [trail]);
 
-  // Bus markers with gliding movement
+  // Neon bus markers: glide between positions, leave a light trail.
   useEffect(() => {
     const map = mapRef.current;
     const seen = new Set();
@@ -137,39 +156,22 @@ export default function MapView({
       seen.add(bus.id);
       let entry = busMarkers.current.get(bus.id);
       if (!entry) {
-        const el = document.createElement('button');
-        el.type = 'button';
-        el.className = 'bus-marker';
-        el.addEventListener('click', (e) => { e.stopPropagation(); handlers.current.onBusClick?.(entry.id); });
+        const el = createBusMarkerEl(() => handlers.current.onBusClick?.(entry.id));
         const marker = new maplibregl.Marker({ element: el }).setLngLat([bus.lng, bus.lat]).addTo(map);
-        entry = { id: bus.id, el, marker, pos: [bus.lng, bus.lat], raf: 0 };
+        entry = { id: bus.id, el, marker, pos: [bus.lng, bus.lat], raf: 0, color: bus.color };
         busMarkers.current.set(bus.id, entry);
+        trails.current?.push(bus.id, entry.pos, bus.color || neon.cyan);
       }
-      entry.el.textContent = bus.label;
-      entry.el.setAttribute('aria-label', `Bus ${bus.label}`);
-      entry.el.style.setProperty('--stock', bus.color || colors.counterfoil);
-      entry.el.dataset.selected = Boolean(bus.selected);
-      entry.el.dataset.alert = Boolean(bus.alert);
-      entry.el.dataset.stale = Boolean(bus.stale);
+      const color = bus.alert ? neon.alert : bus.color || neon.cyan;
+      entry.color = color;
+      updateBusMarkerEl(entry.el, { color, label: bus.label, selected: bus.selected, alert: bus.alert, stale: bus.stale, chip: bus.chip });
       entry.marker.getElement().style.zIndex = bus.selected || bus.alert ? '3' : '2';
 
       const target = [bus.lng, bus.lat];
       if (target[0] !== entry.pos[0] || target[1] !== entry.pos[1]) {
-        cancelAnimationFrame(entry.raf);
-        const from = entry.marker.getLngLat().toArray();
         entry.pos = target;
-        if (reduceMotion()) {
-          entry.marker.setLngLat(target);
-        } else {
-          const start = performance.now();
-          const step = (now) => {
-            const t = Math.min(1, (now - start) / GLIDE_MS);
-            const e = 1 - Math.pow(1 - t, 3);
-            entry.marker.setLngLat([from[0] + (target[0] - from[0]) * e, from[1] + (target[1] - from[1]) * e]);
-            if (t < 1) entry.raf = requestAnimationFrame(step);
-          };
-          entry.raf = requestAnimationFrame(step);
-        }
+        trails.current?.push(bus.id, target, color);
+        glideMarker(entry, target, { ms: GLIDE_MS, onFrame: (p) => trails.current?.head(bus.id, p) });
       }
     }
     for (const [id, entry] of busMarkers.current) {
@@ -177,11 +179,12 @@ export default function MapView({
         cancelAnimationFrame(entry.raf);
         entry.marker.remove();
         busMarkers.current.delete(id);
+        trails.current?.remove(id);
       }
     }
   }, [buses]);
 
-  // Incident markers (pulsing)
+  // Incident markers (pulsing) with SOS ripple rings
   useEffect(() => {
     const map = mapRef.current;
     const seen = new Set();
@@ -191,7 +194,8 @@ export default function MapView({
       let entry = incidentMarkers.current.get(inc.id);
       if (!entry) {
         const el = document.createElement('div');
-        el.className = 'incident-marker';
+        el.className = 'sos-ripple';
+        el.innerHTML = '<span></span><span></span><span></span><div class="incident-marker" style="position:absolute;left:-11px;top:-11px"></div>';
         el.title = inc.title || 'Incident';
         entry = { marker: new maplibregl.Marker({ element: el }).setLngLat([inc.lng, inc.lat]).addTo(map) };
         incidentMarkers.current.set(inc.id, entry);
@@ -217,12 +221,12 @@ export default function MapView({
       ];
       if (!pts.length) return;
       const bounds = pts.reduce((b, p) => b.extend(p), new maplibregl.LngLatBounds(pts[0], pts[0]));
-      map.fitBounds(bounds, { padding: fitPadding, maxZoom: 15, duration: reduceMotion() ? 0 : 900 });
+      map.fitBounds(bounds, { padding: fitPadding, maxZoom: 15, duration: prefersReducedMotion() ? 0 : 900 });
     };
     if (loaded.current) fit();
     else map.once('data-ready', fit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fitKey]);
 
-  return <div ref={container} className={cn('w-full h-full bg-[#E8EAE4]', className)} />;
+  return <div ref={container} className={cn('w-full h-full bg-paper', className)} />;
 }

@@ -2,11 +2,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, PanResponder, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from 'transit-shared/native/theme';
+import { useTheme, glass } from 'transit-shared/native/theme';
 
 export const SNAPS = ['peek', 'half', 'full'];
 
-export default function BottomSheet({ snap = 'half', onSnapChange, header, children, scrollRef }) {
+export default function BottomSheet({ snap = 'half', onSnapChange, onScrolled, header, children, scrollRef }) {
   const theme = useTheme();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -36,12 +36,15 @@ export default function BottomSheet({ snap = 'half', onSnapChange, header, child
   });
 
   return (
-    <Animated.View style={[styles.sheet, { backgroundColor: theme.surface, borderColor: theme.rule, height: heights.full, transform: [{ translateY: Animated.subtract(y, height - heights.full) }] }]}>
+    <Animated.View style={[styles.sheet, { backgroundColor: theme.surface, borderColor: theme.rule, height: heights.full, transform: [{ translateY: Animated.subtract(y, height - heights.full) }] },
+      // Night Glass: the sheet floats over the map webview, so it uses the solid glass fill (see DESIGN.md › Blur over the map)
+      theme.night && styles.glass]}>
       <View {...pan.current.panHandlers} style={styles.handleArea}>
-        <View style={[styles.grip, { backgroundColor: theme.rule }]} />
+        <View style={[styles.grip, { backgroundColor: theme.night ? 'rgba(255,255,255,.25)' : theme.rule }]} />
         {header}
       </View>
-      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 120 }} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 120 }} keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={64} onScroll={onScrolled ? (e) => onScrolled(e.nativeEvent.contentOffset.y > 24) : undefined}>
         {children}
       </ScrollView>
     </Animated.View>
@@ -53,6 +56,11 @@ const styles = StyleSheet.create({
     position: 'absolute', left: 0, right: 0, top: 0,
     borderTopLeftRadius: 14, borderTopRightRadius: 14, borderWidth: 1, borderBottomWidth: 0,
     shadowColor: '#16213E', shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: -4 }, elevation: 12
+  },
+  glass: {
+    // Long text lives here: opaque raised surface so neon glows behind never cut contrast (fillSolid .88 let them through)
+    backgroundColor: glass.bg.raised, borderColor: glass.border, borderTopColor: 'rgba(255,255,255,.2)',
+    borderTopLeftRadius: 18, borderTopRightRadius: 18, shadowColor: '#000', shadowOpacity: 0.7
   },
   handleArea: { paddingTop: 8, paddingBottom: 6, paddingHorizontal: 16 },
   grip: { width: 44, height: 5, borderRadius: 3, alignSelf: 'center', marginBottom: 10 }

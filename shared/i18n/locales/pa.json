@@ -60,7 +60,11 @@
     "dob": "ਜਨਮ ਮਿਤੀ",
     "dobHint": "ਦਿਨ/ਮਹੀਨਾ/ਸਾਲ",
     "gender": "ਲਿੰਗ",
-    "genders": { "male": "ਪੁਰਸ਼", "female": "ਔਰਤ", "other": "ਹੋਰ" },
+    "genders": {
+      "male": "ਪੁਰਸ਼",
+      "female": "ਔਰਤ",
+      "other": "ਹੋਰ"
+    },
     "phone": "ਮੋਬਾਈਲ ਨੰਬਰ",
     "email": "ਈਮੇਲ",
     "password": "ਪਾਸਵਰਡ ਬਣਾਓ",
@@ -151,7 +155,17 @@
     "queued_other": "{{count}} ਲੋਕੇਸ਼ਨਾਂ ਆਫ਼ਲਾਈਨ ਸੰਭਾਲੀਆਂ ਗਈਆਂ — ਆਨਲਾਈਨ ਹੋਣ 'ਤੇ ਭੇਜੀਆਂ ਜਾਣਗੀਆਂ",
     "waitingGps": "GPS ਦੀ ਉਡੀਕ…",
     "startNeedsLocation": "ਸਫ਼ਰ ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਲੋਕੇਸ਼ਨ ਚਾਲੂ ਕਰੋ।",
-    "speed": "{{count}} ਕਿਮੀ/ਘੰਟਾ"
+    "speed": "{{count}} ਕਿਮੀ/ਘੰਟਾ",
+    "tripOf": "Trip {{n}} of {{m}}",
+    "liveGps": "Live GPS",
+    "gpsOff": "GPS off",
+    "toStop": "to {{stop}}",
+    "arrived": "Arrived ✓",
+    "speedLabel": "Speed",
+    "statusLabel": "Status",
+    "stopLabel": "Stop",
+    "report": "Report",
+    "holdSos": "Hold · SOS"
   },
   "location": {
     "on": "ਲੋਕੇਸ਼ਨ ਚਾਲੂ",
@@ -261,13 +275,24 @@
     "newAccount": "ਨਵੇਂ ਹੋ? ਖਾਤਾ ਬਣਾਓ",
     "signedInAs": "{{name}} ਵਜੋਂ ਸਾਈਨ ਇਨ",
     "panicBusHint": "ਬੱਸ ਚੁਣੋ ਤਾਂ ਜੋ ਕੰਟਰੋਲ ਰੂਮ ਨੂੰ ਪਤਾ ਲੱਗੇ ਕਿ ਮਦਦ ਕਿੱਥੇ ਭੇਜਣੀ ਹੈ।",
-    "about": "ਲਾਈਵ ਆਮਦ ਦਾ ਸਮਾਂ ਡਰਾਈਵਰਾਂ ਦੇ ਫ਼ੋਨਾਂ ਤੋਂ ਆਉਂਦਾ ਹੈ। ਨਕਸ਼ਾ ਡੇਟਾ © OpenStreetMap ਯੋਗਦਾਨੀ।"
+    "about": "ਲਾਈਵ ਆਮਦ ਦਾ ਸਮਾਂ ਡਰਾਈਵਰਾਂ ਦੇ ਫ਼ੋਨਾਂ ਤੋਂ ਆਉਂਦਾ ਹੈ। ਨਕਸ਼ਾ ਡੇਟਾ © OpenStreetMap ਯੋਗਦਾਨੀ।",
+    "arrivingAt": "Arriving at {{stop}}",
+    "locateMe": "Show my location",
+    "showAllBuses": "Show all buses",
+    "showTripBuses": "Show only buses for my trip",
+    "towards": "→ {{place}}"
   },
   "settings": {
     "title": "ਸੈਟਿੰਗਾਂ",
     "account": "ਖਾਤਾ",
     "about": "ਜਾਣਕਾਰੀ",
     "version": "ਸੰਸਕਰਣ {{version}}",
-    "privacy": "ਤੁਹਾਡੀ ਲੋਕੇਸ਼ਨ ਸਿਰਫ਼ ਸਫ਼ਰ ਦੌਰਾਨ, ਜਾਂ SOS ਤੋਂ ਬਾਅਦ 15 ਮਿੰਟ ਤੱਕ ਸਾਂਝੀ ਹੁੰਦੀ ਹੈ।"
+    "privacy": "ਤੁਹਾਡੀ ਲੋਕੇਸ਼ਨ ਸਿਰਫ਼ ਸਫ਼ਰ ਦੌਰਾਨ, ਜਾਂ SOS ਤੋਂ ਬਾਅਦ 15 ਮਿੰਟ ਤੱਕ ਸਾਂਝੀ ਹੁੰਦੀ ਹੈ।",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "reduceEffects": "Reduce effects",
+    "reduceEffectsHint": "Turns off blur and glow. Smoother on older phones."
   }
 }

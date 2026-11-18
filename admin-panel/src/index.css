@@ -2,83 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ticket Stock — see DESIGN.md */
+/* Night Glass — the admin panel's theme. See DESIGN.md › Night Glass.
+   Class names are the Ticket Stock ones; tailwind.config.js maps them to Night Glass colours. */
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
   body {
-    @apply bg-paper text-ink font-sans;
+    @apply bg-deep text-ink font-sans;
     font-size: 15px;
     line-height: 1.55;
   }
   :focus-visible {
-    outline: 2px solid theme('colors.ink.DEFAULT');
+    outline: 2px solid theme('colors.neon.cyan');
     outline-offset: 2px;
   }
   ::selection {
-    background: theme('colors.mint');
+    background: rgba(62, 230, 255, 0.3);
   }
 }
 
 @layer components {
-  /* Numbers print: tabular, condensed, heavy */
+  /* Frosted panel */
+  .glass {
+    background: theme('colors.glass.DEFAULT');
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid theme('colors.glass.border');
+    border-radius: 18px;
+    box-shadow: 0 20px 40px -18px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background: theme('colors.glass.solid');
+    }
+  }
+  /* Panels floating over the neon map: stronger tint keeps muted text ≥ 4.5:1 (see DESIGN.md) */
+  .over-map .glass {
+    background: rgba(22, 30, 52, 0.72);
+  }
+  /* Card inside a glass panel (never glass on glass) */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+  }
+
+  /* Numbers print: tabular, heavy (Anek condensed — works in every script) */
   .num {
     font-variant-numeric: tabular-nums;
     font-variation-settings: 'wdth' 75;
     font-weight: 800;
     line-height: 0.9;
   }
+  /* Latin-only figures: KPIs, bus numbers, timestamps */
+  .kpi-num {
+    font-family: theme('fontFamily.grotesk');
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
   .condensed {
     font-variation-settings: 'wdth' 75;
   }
-  /* The serial line: the only tracked uppercase label in the system */
+  /* Tracked label: Latin serial lines and column heads only */
   .serial {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-family: theme('fontFamily.mono');
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    line-height: 1.2;
+    line-height: 1.3;
   }
 
   .ticket {
-    @apply bg-counterfoil border border-rule rounded-md shadow-rest;
+    @apply glass;
   }
 
-  /* Perforation with semicircular notches cut at both ends (vertical tear line) */
+  /* Perforation → a hairline in Night Glass */
   .perf-v {
     position: relative;
     width: 0;
-    border-left: 2px dotted theme('colors.rule');
+    border-left: 1px solid theme('colors.glass.border');
     align-self: stretch;
   }
-  .perf-v::before,
-  .perf-v::after {
-    content: '';
-    position: absolute;
-    left: -11px;
-    width: 20px;
-    height: 10px;
-    background: var(--notch-bg, theme('colors.paper'));
-    border: 1px solid theme('colors.rule');
-  }
-  .perf-v::before {
-    top: -1px;
-    border-top: none;
-    border-radius: 0 0 10px 10px;
-  }
-  .perf-v::after {
-    bottom: -1px;
-    border-bottom: none;
-    border-radius: 10px 10px 0 0;
-  }
   .perf-h {
-    border-top: 2px dotted theme('colors.rule');
+    border-top: 1px solid theme('colors.glass.border');
   }
 
-  /* Punch hole: unpunched ring / punched (cut through) */
+  /* Stop dot: unpassed ring / passed (filled with route neon) / next (white ring) */
   .hole {
     width: 12px;
     height: 12px;
@@ -89,37 +107,45 @@
     position: relative;
   }
   .hole[data-punched='true'] {
-    background: var(--hole-bg, theme('colors.paper'));
+    background: var(--hole-ring, theme('colors.rule'));
     border-color: var(--hole-ring, theme('colors.rule'));
-    box-shadow: inset 0 1px 2px rgba(22, 33, 62, 0.35);
   }
   .hole[data-next='true'] {
     border: 2.5px solid theme('colors.ink.DEFAULT');
+    box-shadow: 0 0 10px rgba(234, 240, 255, 0.35);
   }
 
-  /* Rubber stamp */
+  /* Status chip (the dark theme's stamp): neon text + hairline, not rotated */
   .stamp {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 1px 7px;
-    border: 2px solid currentColor;
-    border-radius: 4px;
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    gap: 6px;
+    padding: 2px 9px;
+    border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    border-radius: 12px;
+    font-family: theme('fontFamily.mono');
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    line-height: 1.5;
-    transform: rotate(-3deg);
-    opacity: 0.88;
+    line-height: 1.6;
     white-space: nowrap;
   }
+  .stamp::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+  }
   .stamp-land {
-    animation: stamp-land 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: stamp-land 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 h-12 px-5 rounded-md font-semibold text-[15px] transition-[background-color,transform,box-shadow] duration-150 ease-out select-none;
+    @apply inline-flex items-center justify-center gap-2 h-12 px-5 rounded-[14px] font-semibold text-[15px] transition-[background-color,transform,box-shadow,filter] duration-150 ease-out select-none;
   }
   .btn:active:not(:disabled) {
     transform: translateY(1px);
@@ -128,31 +154,32 @@
     @apply opacity-50 cursor-not-allowed;
   }
   .btn-sm {
-    @apply h-9 px-3 text-sm;
+    @apply h-9 px-3 text-sm rounded-[12px];
   }
   .btn-primary {
-    @apply bg-ink text-counterfoil hover:bg-[#0f182f];
+    @apply bg-accent text-deep;
+    box-shadow: 0 0 18px rgba(62, 230, 255, 0.25);
   }
-  .btn-primary:focus-visible {
-    outline: 2px solid theme('colors.mint');
-    outline-offset: 2px;
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+    box-shadow: 0 0 24px rgba(62, 230, 255, 0.45);
   }
   .btn-secondary {
-    @apply bg-counterfoil text-ink border-[1.5px] border-ink hover:bg-paper;
+    @apply bg-white/[.06] text-ink border border-glass-border hover:bg-white/10;
   }
   .btn-ghost {
-    @apply text-ink hover:bg-ink/5;
+    @apply text-ink hover:bg-white/[.07];
   }
   .btn-danger {
-    @apply bg-signal text-counterfoil hover:bg-[#b51b29];
+    @apply bg-signal text-deep hover:brightness-110;
   }
 
   .field {
-    @apply w-full h-12 px-3.5 rounded-md bg-counterfoil border-[1.5px] border-rule text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-150;
+    @apply w-full h-12 px-3.5 rounded-[12px] bg-white/[.06] border border-glass-border text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] duration-150;
   }
   .field:focus {
-    @apply outline-none border-ink;
-    box-shadow: 0 0 0 3px theme('colors.mint');
+    @apply outline-none border-neon-cyan;
+    box-shadow: 0 0 0 3px rgba(62, 230, 255, 0.2);
   }
   .field[aria-invalid='true'] {
     @apply border-signal;
@@ -160,33 +187,54 @@
   textarea.field {
     @apply h-auto py-3;
   }
+  select.field option {
+    background: theme('colors.raised');
+  }
 
-  /* Waybill table */
+  /* Dark table: sticky glass header, row hover glow */
   .waybill {
     @apply w-full border-collapse text-[14.5px];
   }
   .waybill thead th {
-    @apply serial text-ink-faint text-left font-semibold px-4 py-3 border-b-2 border-ink bg-counterfoil sticky top-0 z-[1];
+    @apply serial text-ink-faint text-left px-4 py-3 border-b border-glass-border sticky top-0 z-[1];
+    background: rgba(14, 20, 36, 0.8);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
   }
   .waybill tbody td {
-    @apply px-4 py-3 border-b border-rule align-middle;
+    @apply px-4 py-3 border-b border-white/[.06] align-middle;
   }
   .waybill tbody tr {
-    @apply transition-colors duration-150;
+    @apply transition-[background-color,box-shadow] duration-150;
   }
   .waybill tbody tr:hover {
-    @apply bg-paper/70;
+    background: rgba(62, 230, 255, 0.05);
+    box-shadow: inset 3px 0 0 theme('colors.neon.cyan');
   }
 }
 
+/* Aurora: three slow-drifting blobs behind the shell */
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.aurora-1 { width: 700px; height: 500px; left: -120px; top: -160px; background: #2B3BFF; animation: drift1 14s ease-in-out infinite; }
+.aurora-2 { width: 600px; height: 500px; right: -100px; top: 280px; background: #7A2BFF; animation: drift2 14s ease-in-out infinite; }
+.aurora-3 { width: 520px; height: 380px; left: 40%; bottom: -200px; background: #0FB5C9; opacity: 0.4; animation: drift1 14s ease-in-out -5s infinite; }
+@keyframes drift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(120px, 60px); } }
+@keyframes drift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-140px, -50px); } }
+
 @keyframes stamp-land {
   from {
-    transform: scale(1.25) rotate(-8deg);
+    transform: scale(0.85);
     opacity: 0;
   }
   to {
-    transform: scale(1) rotate(-3deg);
-    opacity: 0.88;
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -213,11 +261,11 @@
 
 @keyframes punch-chad {
   0% {
-    transform: translate(0, 0) rotate(0);
+    transform: scale(1);
     opacity: 1;
   }
   100% {
-    transform: translate(4px, 16px) rotate(120deg);
+    transform: scale(2.2);
     opacity: 0;
   }
 }
@@ -225,61 +273,135 @@
 @keyframes alert-lit {
   0%,
   100% {
-    background-color: theme('colors.signal.stock');
+    border-color: rgba(255, 77, 109, 0.4);
+    box-shadow: 0 0 0 rgba(255, 77, 109, 0);
   }
   50% {
-    background-color: #fdeaec;
+    border-color: rgba(255, 77, 109, 0.85);
+    box-shadow: 0 0 18px rgba(255, 77, 109, 0.35);
   }
 }
 .alert-lit {
+  background-color: rgba(255, 77, 109, 0.12);
+  border: 1px solid rgba(255, 77, 109, 0.6);
   animation: alert-lit 1.6s ease-in-out infinite;
 }
 
-/* Map markers */
-.bus-marker {
-  display: grid;
-  place-items: center;
-  min-width: 34px;
-  height: 26px;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: theme('colors.ink.DEFAULT');
-  color: theme('colors.counterfoil');
-  font-weight: 800;
-  font-size: 14px;
-  font-variation-settings: 'wdth' 75;
-  font-variant-numeric: tabular-nums;
-  border: 2px solid var(--stock, theme('colors.mint'));
-  box-shadow: 0 4px 10px -4px rgba(22, 33, 62, 0.5);
+/* Replay scrubber: native range over a custom track */
+.replay-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
   cursor: pointer;
-  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.bus-marker:hover,
-.bus-marker[data-selected='true'] {
-  transform: scale(1.15);
+.replay-range::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 16px;
 }
-.bus-marker[data-alert='true'] {
-  background: theme('colors.signal.DEFAULT');
+.replay-range::-moz-range-track {
+  background: transparent;
 }
-.bus-marker[data-stale='true'] {
-  opacity: 0.55;
+.replay-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px #3EE6FF;
 }
+.replay-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px #3EE6FF;
+}
+
+/* Unread alerts badge on the dock */
+@keyframes badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 240, 255, 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: theme('colors.neon.lime');
+  box-shadow: 0 0 8px theme('colors.neon.lime');
+  animation: blink 1s steps(2) infinite;
+}
+
+/* ─── Map: bus markers + ETA chips are in shared/neonMap.js; incidents and SOS ripple here ─── */
 .incident-marker {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: theme('colors.signal.DEFAULT');
-  border: 3px solid theme('colors.counterfoil');
-  box-shadow: 0 0 0 0 rgba(208, 32, 47, 0.6);
+  background: theme('colors.neon.alert');
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.6);
   animation: incident-pulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 @keyframes incident-pulse {
   to {
-    box-shadow: 0 0 0 16px rgba(208, 32, 47, 0);
+    box-shadow: 0 0 0 16px rgba(255, 77, 109, 0);
   }
 }
+.sos-ripple {
+  /* position comes from .maplibregl-marker (absolute) — don't override it */
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.sos-ripple span {
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid theme('colors.neon.alert');
+  animation: sos-ripple 1.5s ease-out infinite;
+}
+.sos-ripple span:nth-child(2) { animation-delay: 0.5s; }
+.sos-ripple span:nth-child(3) { animation-delay: 1s; }
+@keyframes sos-ripple {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(7); opacity: 0; }
+}
+
 .maplibregl-ctrl-attrib {
   font-size: 11px;
+}
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background: rgba(22, 30, 52, 0.7) !important;
+  color: theme('colors.ink.faint');
+}
+.maplibregl-ctrl-attrib a {
+  color: theme('colors.ink.soft') !important;
+}
+.maplibregl-ctrl-group {
+  background: rgba(22, 30, 52, 0.8) !important;
+  border: 1px solid theme('colors.glass.border');
+  border-radius: 12px !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: theme('colors.glass.border') !important;
+}
+.maplibregl-ctrl-group .maplibregl-ctrl-icon {
+  filter: invert(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -289,5 +411,8 @@
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+  .sos-ripple span:not(:first-child) {
+    display: none;
   }
 }

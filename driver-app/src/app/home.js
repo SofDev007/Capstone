@@ -15,7 +15,12 @@ import SlideToConfirm from '../components/SlideToConfirm';
 import Sheet from 'transit-shared/native/Sheet';
 import { Ticket, RouteBadge, StageStrip, Stamp, Banner, Button } from 'transit-shared/native/ui';
 import { useAuth } from '../lib/auth';
-import { useTheme, routeStock } from 'transit-shared/native/theme';
+import { useTheme, routeStock, stockInk, neon } from 'transit-shared/native/theme';
+import { neonForRoute } from 'transit-shared/theme/tokens.js';
+import { haversine } from 'transit-shared/geo.js';
+import Glass, { GlassScreen } from 'transit-shared/native/Glass';
+import { useReducedMotion } from 'react-native-reanimated';
+import ProgressRing from '../components/ProgressRing';
 import { api, errorText } from '../lib/api';
 import { setActiveTrip, startBackgroundTracking, stopBackgroundTracking, flushQueue, fromLocation } from '../lib/tracking';
 import { useDriverState, useWatchPosition, useTripLoop, useLocationWarnings, useReroute, useOnline, turnOnLocation } from '../lib/hooks';
@@ -23,12 +28,24 @@ import { useDriverState, useWatchPosition, useTripLoop, useLocationWarnings, use
 function LocationPill({ on }) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const color = on ? (theme.night ? '#BFE6CF' : '#17633F') : theme.signal;
+  const color = on ? (theme.night ? neon.lime : '#17633F') : theme.signal;
+  const label = theme.night ? (on ? t('driver.liveGps') : t('driver.gpsOff')) : on ? t('location.on') : t('location.off');
   return (
-    <View style={[styles.pill, { borderColor: color }]} accessibilityLabel={on ? t('location.on') : t('location.off')}>
+    <View style={[styles.pill, { borderColor: theme.night ? 'transparent' : color }]} accessibilityLabel={on ? t('location.on') : t('location.off')}>
       <View style={[styles.pillDot, { backgroundColor: color }]} />
-      <T variant="label" color={color}>{on ? t('location.on') : t('location.off')}</T>
+      <T variant="label" color={color}>{label}</T>
     </View>
+  );
+}
+
+/** HUD chip: tracked label + value (Latin-only labels stay in the serial style; T skips uppercase for Indic). */
+function Chip({ label, value, color }) {
+  const theme = useTheme();
+  return (
+    <Glass radius={14} style={styles.chip}>
+      <T variant="label" color={theme.inkFaint} numberOfLines={1}>{label}</T>
+      <T variant="title" color={color || theme.ink} numberOfLines={1} style={{ fontSize: 17, lineHeight: 22, marginTop: 2 }}>{value}</T>
+    </Glass>
   );
 }
 
@@ -72,6 +89,7 @@ export default function Home() {
   const [breakdown, setBreakdown] = useState('');
 
   const tripActive = Boolean(trip);
+  const reduceMotion = useReducedMotion();
   const positionRef = useRef(null);
   const warnings = useLocationWarnings({ tripId: trip?._id, positionRef, t });
   const { position } = useWatchPosition(true, warnings.locationOn);
@@ -184,26 +202,53 @@ export default function Home() {
     nextIndex,
     position: tripActive ? position : null,
     detour: detour?.coordinates || null,
-    ink: stock.ink,
+    ink: theme.night ? neonForRoute(route) : stock.ink,
     stock: stock.stock,
     night: theme.night,
-    follow: tripActive
+    follow: tripActive,
+    reduceMotion
   };
 
+  // ---------- HUD numbers (all from existing tracking data) ----------
+  const target = stops[nextIndex];
+  const from = nextIndex > 0 ? stops[nextIndex - 1] : trip?.startLocation;
+  const meters = position && target ? haversine(position, target) : null;
+  const total = from && target ? Math.max(50, haversine(from, target)) : null;
+  // "Trip n of m": the trip's scheduled departure among the route's departures (when the route has a timetable).
+  const sched = trip?.scheduledDeparture ? new Date(trip.scheduledDeparture) : null;
+  const hhmm = sched && `${String(sched.getHours()).padStart(2, '0')}:${String(sched.getMinutes()).padStart(2, '0')}`;
+  const tripN = hhmm ? (route?.departures || []).indexOf(hhmm) + 1 : 0;
+  const late = view?.delayMinutes > 5;
+  // Turn card only when routing already gave manoeuvres (the off-route detour from ORS).
+  const turn = offRoute && detour?.steps?.find((s, i) => i > 0 && s.instruction);
+
   return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+    <GlassScreen>
       <ScrollView
-        contentContainerStyle={{ paddingTop: insets.top + 10, paddingHorizontal: 16, paddingBottom: 24, gap: 14 }}
-        refreshControl={<RefreshControl refreshing={loading && !me} onRefresh={refresh} />}
+        contentContainerStyle={{ paddingTop: insets.top + 10, paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 14 }}
+        refreshControl={<RefreshControl refreshing={loading && !me} onRefresh={refresh} tintColor={theme.ink} />}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <T variant="title" numberOfLines={1} style={{ flex: 1 }}>{t('driver.hello', { name: (user?.name || '').split(' ')[0] })}</T>
-          {tripActive && <LocationPill on={warnings.locationOn} />}
-          <Pressable onPress={() => router.push('/settings')} hitSlop={12} accessibilityLabel={t('common.settings')}>
-            <Ionicons name="settings-outline" size={24} color={theme.ink} />
-          </Pressable>
-        </View>
+        {/* Header: greeting before a trip; a glass status pill during one */}
+        {tripActive && theme.night ? (
+          <Glass radius={999} style={styles.topPill}>
+            <RouteBadge route={route} />
+            <T variant="bodyStrong" numberOfLines={1} style={{ flex: 1 }}>
+              {tripN ? t('driver.tripOf', { n: tripN, m: route.departures.length }) : t('driver.bus', { number: me?.bus?.busNumber ?? '' })}
+            </T>
+            <LocationPill on={warnings.locationOn} />
+            <Pressable onPress={() => router.push('/settings')} hitSlop={12} accessibilityLabel={t('common.settings')} style={styles.iconBtn}>
+              <Ionicons name="settings-outline" size={22} color={theme.ink} />
+            </Pressable>
+          </Glass>
+        ) : (
+          <View style={styles.header}>
+            <T variant="title" numberOfLines={1} style={{ flex: 1 }}>{t('driver.hello', { name: (user?.name || '').split(' ')[0] })}</T>
+            {tripActive && <LocationPill on={warnings.locationOn} />}
+            <Pressable onPress={() => router.push('/settings')} hitSlop={12} accessibilityLabel={t('common.settings')} style={styles.iconBtn}>
+              <Ionicons name="settings-outline" size={24} color={theme.ink} />
+            </Pressable>
+          </View>
+        )}
 
         {!online && <Banner tone="warn">{t('common.offline')}</Banner>}
         {queued > 0 && <Banner tone="info">{t('driver.queued', { count: queued })}</Banner>}
@@ -225,16 +270,48 @@ export default function Home() {
           </Ticket>
         )}
 
-        {tripActive && (
+        {tripActive && theme.night && (
+          <>
+            {nextStop ? (
+              <ProgressRing meters={meters} total={total} stopName={nextStop.name} stopIndex={nextIndex} />
+            ) : (
+              <Glass radius={18} style={{ padding: 18, alignItems: 'center', gap: 6 }}>
+                <Ionicons name="flag" size={30} color={neon.lime} />
+                <T variant="headline" style={{ textAlign: 'center' }}>{t('driver.endOfRoute')}</T>
+              </Glass>
+            )}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Chip label={t('driver.speedLabel')} value={view?.speed != null ? `${view.speed} km/h` : '–'} />
+              <Chip label={t('driver.statusLabel')} value={view?.delayMinutes == null ? '–' : late ? t('common.delayed', { count: view.delayMinutes }) : t('common.onTime')}
+                color={view?.delayMinutes == null ? undefined : late ? neon.amber : neon.lime} />
+              <Chip label={t('driver.stopLabel')} value={stops.length ? `${Math.min(nextIndex + 1, stops.length)}/${stops.length}` : '–'} />
+            </View>
+            {turn && (
+              <Glass radius={16} style={styles.turn}>
+                <View style={styles.turnArrow}><Ionicons name="return-up-forward" size={26} color={neon.cyan} /></View>
+                <View style={{ flex: 1 }}>
+                  <T variant="bodyStrong" numberOfLines={2}>{turn.instruction}</T>
+                  {detour?.toStop && <T variant="small" color={theme.inkSoft} numberOfLines={1}>{t('driver.offRouteBody', { stop: detour.toStop.name })}</T>}
+                </View>
+              </Glass>
+            )}
+            {offRoute && !turn && (
+              <Banner tone="warn">{detour?.toStop ? `${t('driver.offRouteTitle')} — ${t('driver.offRouteBody', { stop: detour.toStop.name })}` : t('driver.rerouting')}</Banner>
+            )}
+            {!position && warnings.locationOn && <Banner tone="info">{t('driver.waitingGps')}</Banner>}
+          </>
+        )}
+
+        {tripActive && !theme.night && (
           <>
             <Ticket
               stubStock={stock}
               stub={nextStop ? (
                 <View style={{ alignItems: 'center' }}>
-                  <T variant="display" color={stock.ink}>{nextStop.etaMinutes ?? '–'}</T>
-                  <T variant="bodyStrong" color={stock.ink} style={{ marginTop: -2 }}>{t('common.min')}</T>
+                  <T variant="display" color={stockInk(stock, theme)}>{nextStop.etaMinutes ?? '–'}</T>
+                  <T variant="bodyStrong" color={stockInk(stock, theme)} style={{ marginTop: -2 }}>{t('common.min')}</T>
                 </View>
-              ) : <Ionicons name="flag" size={30} color={stock.ink} />}
+              ) : <Ionicons name="flag" size={30} color={stockInk(stock, theme)} />}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <RouteBadge route={route} />
@@ -261,12 +338,27 @@ export default function Home() {
         )}
 
         {route?.path?.length > 1 && (
-          <View style={[styles.map, { borderColor: theme.rule, height: tripActive ? 320 : 220 }]}>
+          <View style={[styles.map, { borderColor: theme.rule, height: tripActive ? (theme.night ? 240 : 320) : 220 }, theme.night && { borderRadius: 18 }]}>
             <RouteMap {...mapProps} dom={{ scrollEnabled: false, style: { flex: 1 } }} />
           </View>
         )}
 
-        {me?.bus && (
+        {me?.bus && tripActive && theme.night && (
+          <View style={{ gap: 10, marginTop: 4 }}>
+            <SlideToConfirm label={t('driver.slideToEnd')} onConfirm={endTrip} loading={busy} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Pressable onPress={() => setBreakdownOpen(true)} accessibilityRole="button" accessibilityLabel={t('driver.breakdown')} style={{ flex: 1 }}>
+                <Glass radius={18} style={styles.report}>
+                  <Ionicons name="warning-outline" size={20} color={neon.amber} />
+                  <T variant="bodyStrong" style={{ fontSize: 17 }}>{t('driver.report')}</T>
+                </Glass>
+              </Pressable>
+              <PanicButton onTrigger={sendPanic} size={64} />
+            </View>
+          </View>
+        )}
+
+        {me?.bus && !(tripActive && theme.night) && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4 }}>
             <View style={{ flex: 1, gap: 10 }}>
               {tripActive ? (
@@ -304,12 +396,18 @@ export default function Home() {
         />
         <Button title={t('driver.breakdownSend')} onPress={sendBreakdown} disabled={breakdown.trim().length < 3} />
       </Sheet>
-    </View>
+    </GlassScreen>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  topPill: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 56, paddingLeft: 10, paddingRight: 4 },
+  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  chip: { flex: 1, minHeight: 60, paddingHorizontal: 10, paddingVertical: 8 },
+  turn: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, minHeight: 70 },
+  turnArrow: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(62,230,255,.14)' },
+  report: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 60 },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   pillDot: { width: 8, height: 8, borderRadius: 4 },
   map: { borderRadius: 8, overflow: 'hidden', borderWidth: 1 },

@@ -60,7 +60,11 @@
     "dob": "ജനനത്തീയതി",
     "dobHint": "ദിവസം/മാസം/വർഷം",
     "gender": "ലിംഗം",
-    "genders": { "male": "പുരുഷൻ", "female": "സ്ത്രീ", "other": "മറ്റുള്ളവ" },
+    "genders": {
+      "male": "പുരുഷൻ",
+      "female": "സ്ത്രീ",
+      "other": "മറ്റുള്ളവ"
+    },
     "phone": "മൊബൈൽ നമ്പർ",
     "email": "ഇമെയിൽ",
     "password": "പാസ്‌വേഡ് സൃഷ്ടിക്കുക",
@@ -151,7 +155,17 @@
     "queued_other": "{{count}} ലൊക്കേഷനുകൾ ഓഫ്‌ലൈനായി സൂക്ഷിച്ചു — ഓൺലൈനായാൽ അയയ്ക്കും",
     "waitingGps": "GPS-നായി കാത്തിരിക്കുന്നു…",
     "startNeedsLocation": "യാത്ര തുടങ്ങാൻ ലൊക്കേഷൻ ഓണാക്കുക.",
-    "speed": "{{count}} കി.മീ/മണിക്കൂർ"
+    "speed": "{{count}} കി.മീ/മണിക്കൂർ",
+    "tripOf": "Trip {{n}} of {{m}}",
+    "liveGps": "Live GPS",
+    "gpsOff": "GPS off",
+    "toStop": "to {{stop}}",
+    "arrived": "Arrived ✓",
+    "speedLabel": "Speed",
+    "statusLabel": "Status",
+    "stopLabel": "Stop",
+    "report": "Report",
+    "holdSos": "Hold · SOS"
   },
   "location": {
     "on": "ലൊക്കേഷൻ ഓൺ",
@@ -261,13 +275,24 @@
     "newAccount": "പുതിയ ആളാണോ? അക്കൗണ്ട് സൃഷ്ടിക്കുക",
     "signedInAs": "{{name}} ആയി സൈൻ ഇൻ ചെയ്തു",
     "panicBusHint": "സഹായം എവിടേക്ക് അയയ്ക്കണമെന്ന് കൺട്രോൾ റൂമിന് അറിയാൻ ബസ് തിരഞ്ഞെടുക്കുക.",
-    "about": "ലൈവ് എത്തിച്ചേരൽ സമയം ഡ്രൈവർമാരുടെ ഫോണുകളിൽ നിന്നാണ്. മാപ്പ് ഡാറ്റ © OpenStreetMap സംഭാവകർ."
+    "about": "ലൈവ് എത്തിച്ചേരൽ സമയം ഡ്രൈവർമാരുടെ ഫോണുകളിൽ നിന്നാണ്. മാപ്പ് ഡാറ്റ © OpenStreetMap സംഭാവകർ.",
+    "arrivingAt": "Arriving at {{stop}}",
+    "locateMe": "Show my location",
+    "showAllBuses": "Show all buses",
+    "showTripBuses": "Show only buses for my trip",
+    "towards": "→ {{place}}"
   },
   "settings": {
     "title": "ക്രമീകരണങ്ങൾ",
     "account": "അക്കൗണ്ട്",
     "about": "വിവരം",
     "version": "പതിപ്പ് {{version}}",
-    "privacy": "നിങ്ങളുടെ ലൊക്കേഷൻ യാത്രയ്ക്കിടെ മാത്രം, അല്ലെങ്കിൽ SOS-ന് ശേഷം 15 മിനിറ്റ് പങ്കിടും."
+    "privacy": "നിങ്ങളുടെ ലൊക്കേഷൻ യാത്രയ്ക്കിടെ മാത്രം, അല്ലെങ്കിൽ SOS-ന് ശേഷം 15 മിനിറ്റ് പങ്കിടും.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "reduceEffects": "Reduce effects",
+    "reduceEffectsHint": "Turns off blur and glow. Smoother on older phones."
   }
 }

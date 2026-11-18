@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { colors, stocks } from '@shared/theme/tokens.js';
+import { glass, neon } from '@shared/theme/tokens.js';
 import { INCIDENT_TYPES } from '@shared/incidents.js';
 import { tripAPI, errorMessage } from '@/lib/api';
 import { PageHeader } from '@/components/Layout';
@@ -89,12 +89,19 @@ export default function Analytics() {
             <div className="h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.perDay} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
-                  <CartesianGrid vertical={false} stroke={colors.rule} strokeDasharray="2 4" />
-                  <XAxis dataKey="date" tickFormatter={(d) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} tick={{ fill: colors.inkFaint, fontSize: 12 }} axisLine={{ stroke: colors.ink }} tickLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fill: colors.inkFaint, fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: 'rgba(22,33,62,.05)' }} contentStyle={{ background: colors.counterfoil, border: `1px solid ${colors.rule}`, borderRadius: 8, fontFamily: 'Anek Latin' }}
+                  <defs>
+                    <linearGradient id="bar-neon" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor={neon.cyan} />
+                      <stop offset="1" stopColor={neon.violet} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="rgba(255,255,255,.08)" strokeDasharray="2 4" />
+                  <XAxis dataKey="date" tickFormatter={(d) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} tick={{ fill: glass.text.muted, fontSize: 12 }} axisLine={{ stroke: glass.border }} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: glass.text.muted, fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: 'rgba(62,230,255,.06)' }} contentStyle={{ background: glass.fillSolid, border: `1px solid ${glass.border}`, borderRadius: 12, fontFamily: 'Anek Latin', color: glass.text.primary, backdropFilter: 'blur(18px)' }}
+                    itemStyle={{ color: neon.cyan }} labelStyle={{ color: glass.text.secondary }}
                     formatter={(v, name) => [v, name === 'trips' ? 'Trips' : name]} labelFormatter={(d) => new Date(d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })} />
-                  <Bar dataKey="trips" fill={colors.ink} radius={[3, 3, 0, 0]} maxBarSize={36} animationDuration={600} />
+                  <Bar dataKey="trips" fill="url(#bar-neon)" radius={[4, 4, 0, 0]} maxBarSize={36} animationDuration={600} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -109,7 +116,7 @@ export default function Analytics() {
                 <li key={type}>
                   <div className="flex justify-between text-[14px] mb-1"><span>{INCIDENT_TYPES[type] || type}</span><span className="num text-[18px]">{n}</span></div>
                   <div className="h-2.5 rounded-sm bg-paper overflow-hidden">
-                    <div className="h-full rounded-sm transition-[width] duration-700 ease-out" style={{ width: `${(n / maxIncidents) * 100}%`, background: type === 'panic' ? colors.signal : stocks.buff.ink }} />
+                    <div className="h-full rounded-sm transition-[width] duration-700 ease-out" style={{ width: `${(n / maxIncidents) * 100}%`, background: type === 'panic' ? neon.alert : type === 'off-route' || type === 'signal-lost' ? neon.pink : neon.amber }} />
                   </div>
                 </li>
               ))}

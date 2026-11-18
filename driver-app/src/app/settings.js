@@ -1,4 +1,4 @@
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, Switch, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,11 +9,12 @@ import T from 'transit-shared/native/T';
 import { Button } from 'transit-shared/native/ui';
 import { setLanguage } from 'transit-shared/native/i18n';
 import { useAuth } from '../lib/auth';
-import { useTheme } from 'transit-shared/native/theme';
+import { useTheme, useThemePrefs, setReduceEffects, neon } from 'transit-shared/native/theme';
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
+  const prefs = useThemePrefs();
   const router = useRouter();
   const { status, signOut } = useAuth();
 
@@ -49,11 +50,20 @@ export default function Settings() {
                 <T variant="bodyStrong">{lang.native}</T>
                 {lang.native !== lang.name && <T variant="small" color={theme.inkFaint}>{lang.name}</T>}
               </View>
-              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: active ? 7 : 2, borderColor: active ? theme.ink : theme.rule }} />
+              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: active ? 7 : 2, borderColor: active ? (theme.night ? neon.cyan : theme.ink) : theme.rule }} />
             </Pressable>
           );
         })}
       </View>
+
+      <Pressable onPress={() => setReduceEffects(!prefs.reduceEffects)} accessibilityRole="switch" accessibilityState={{ checked: prefs.reduceEffects }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, marginTop: 20 }}>
+        <View style={{ flex: 1 }}>
+          <T variant="bodyStrong">{t('settings.reduceEffects')}</T>
+          <T variant="small" color={theme.inkFaint}>{t('settings.reduceEffectsHint')}</T>
+        </View>
+        <Switch value={prefs.reduceEffects} onValueChange={setReduceEffects} trackColor={{ true: theme.night ? neon.cyan : theme.ink }} />
+      </Pressable>
 
       <T variant="small" color={theme.inkFaint} style={{ marginTop: 24 }}>{t('settings.privacy')}</T>
       <T variant="small" color={theme.inkFaint} style={{ marginTop: 6 }}>{t('settings.version', { version: Constants.expoConfig?.version || '' })}</T>

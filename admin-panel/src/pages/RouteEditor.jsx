@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, ArrowUp, ArrowDown, X, Wand2, Trash2, MapPin, Search } from 'lucide-react';
-import { stocks, routeStock } from '@shared/theme/tokens.js';
+import { stocks, routeStock, neonForStock, glass } from '@shared/theme/tokens.js';
 import { transitAPI, errorMessage } from '@/lib/api';
 import MapView from '@/components/MapView';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Field } from '@/components/ui/dialog';
@@ -158,13 +158,13 @@ export default function RouteEditor() {
   const draftStopIds = new Set(draft?.stops.map((s) => s.stop));
   const mapStops = useMemo(() => stops.map((s) => {
     const index = draft ? draft.stops.findIndex((d) => d.stop === s._id) : -1;
-    return { id: s._id, name: s.name, ...lngLat(s), color: index >= 0 ? stock.ink : '#5C647C', highlighted: index >= 0, label: index >= 0 ? `${index + 1}. ${s.name}` : '' };
+    return { id: s._id, name: s.name, ...lngLat(s), color: index >= 0 ? neonForStock(stock) : glass.text.muted, highlighted: index >= 0, label: index >= 0 ? `${index + 1}. ${s.name}` : '' };
   }), [stops, draft, stock]);
   const mapRoutes = useMemo(() => {
     if (!draft || draft.stops.length < 2) return [];
     const unchanged = savedPath && savedPath.key === stopKey(draft.stops) && savedPath.coordinates.length >= 2;
     const coordinates = unchanged ? savedPath.coordinates : draft.stops.map((s) => stopById.get(s.stop)).filter(Boolean).map((s) => s.location.coordinates);
-    return [{ id: 'draft', coordinates, color: stock.ink, highlighted: true }];
+    return [{ id: 'draft', coordinates, color: neonForStock(stock), highlighted: true }];
   }, [draft, savedPath, stopById, stock]);
   const pathIsStale = draft && draft.stops.length >= 2 && (!savedPath || savedPath.key !== stopKey(draft.stops) || savedPath.source !== 'routing');
 
@@ -240,7 +240,7 @@ export default function RouteEditor() {
                   <button key={name} type="button" role="radio" aria-checked={routeStock({ color: draft.color }).ink === s.ink} aria-label={name}
                     onClick={() => update({ color: s.ink })}
                     className={cn('h-10 w-12 rounded-sm border-2 grid place-items-center num text-[18px]', routeStock({ color: draft.color }).ink === s.ink ? 'border-ink' : 'border-transparent')}
-                    style={{ background: s.stock, color: s.ink }}>{draft.number || '#'}</button>
+                    style={{ background: neonForStock(s), color: glass.bg.deep }}>{draft.number || '#'}</button>
                 ))}
               </div>
             </div>
@@ -256,7 +256,7 @@ export default function RouteEditor() {
                 <ol className="ticket divide-y divide-rule">
                   {draft.stops.map((s, i) => (
                     <li key={s.stop} className="flex items-center gap-2 px-3 py-2">
-                      <span className="num text-[16px] w-6 text-center" style={{ color: stock.ink }}>{i + 1}</span>
+                      <span className="num text-[16px] w-6 text-center" style={{ color: neonForStock(stock) }}>{i + 1}</span>
                       <span className="flex-1 min-w-0 truncate">{stopById.get(s.stop)?.name || 'Unknown stop'}</span>
                       <label className="flex items-center gap-1 text-[13px] text-ink-faint" title="Scheduled minutes from the first stop">
                         +<input type="number" min="0" className="w-14 h-8 px-1.5 rounded-sm border border-rule bg-counterfoil text-ink text-right tabular-nums"

@@ -60,7 +60,11 @@
     "dob": "பிறந்த தேதி",
     "dobHint": "நாள்/மாதம்/ஆண்டு",
     "gender": "பாலினம்",
-    "genders": { "male": "ஆண்", "female": "பெண்", "other": "மற்றவை" },
+    "genders": {
+      "male": "ஆண்",
+      "female": "பெண்",
+      "other": "மற்றவை"
+    },
     "phone": "மொபைல் எண்",
     "email": "மின்னஞ்சல்",
     "password": "கடவுச்சொல் உருவாக்கவும்",
@@ -151,7 +155,17 @@
     "queued_other": "{{count}} இருப்பிடங்கள் ஆஃப்லைனில் சேமிக்கப்பட்டன — இணைப்பு வந்ததும் அனுப்பப்படும்",
     "waitingGps": "GPS-க்காகக் காத்திருக்கிறது…",
     "startNeedsLocation": "பயணத்தைத் தொடங்க இருப்பிடத்தை இயக்கவும்.",
-    "speed": "{{count}} கிமீ/மணி"
+    "speed": "{{count}} கிமீ/மணி",
+    "tripOf": "Trip {{n}} of {{m}}",
+    "liveGps": "Live GPS",
+    "gpsOff": "GPS off",
+    "toStop": "to {{stop}}",
+    "arrived": "Arrived ✓",
+    "speedLabel": "Speed",
+    "statusLabel": "Status",
+    "stopLabel": "Stop",
+    "report": "Report",
+    "holdSos": "Hold · SOS"
   },
   "location": {
     "on": "இருப்பிடம் இயக்கத்தில்",
@@ -261,13 +275,24 @@
     "newAccount": "புதியவரா? கணக்கை உருவாக்கவும்",
     "signedInAs": "{{name}} ஆக உள்நுழைந்துள்ளீர்கள்",
     "panicBusHint": "உதவி எங்கே அனுப்ப வேண்டும் என்று கட்டுப்பாட்டு அறைக்குத் தெரிய பேருந்தைத் தேர்ந்தெடுக்கவும்.",
-    "about": "நேரலை வருகை நேரங்கள் ஓட்டுநர்களின் போன்களிலிருந்து வருகின்றன. வரைபடத் தரவு © OpenStreetMap பங்களிப்பாளர்கள்."
+    "about": "நேரலை வருகை நேரங்கள் ஓட்டுநர்களின் போன்களிலிருந்து வருகின்றன. வரைபடத் தரவு © OpenStreetMap பங்களிப்பாளர்கள்.",
+    "arrivingAt": "Arriving at {{stop}}",
+    "locateMe": "Show my location",
+    "showAllBuses": "Show all buses",
+    "showTripBuses": "Show only buses for my trip",
+    "towards": "→ {{place}}"
   },
   "settings": {
     "title": "அமைப்புகள்",
     "account": "கணக்கு",
     "about": "பற்றி",
     "version": "பதிப்பு {{version}}",
-    "privacy": "பயணத்தின்போது மட்டுமே, அல்லது SOS-க்குப் பிறகு 15 நிமிடங்கள் உங்கள் இருப்பிடம் பகிரப்படும்."
+    "privacy": "பயணத்தின்போது மட்டுமே, அல்லது SOS-க்குப் பிறகு 15 நிமிடங்கள் உங்கள் இருப்பிடம் பகிரப்படும்.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "reduceEffects": "Reduce effects",
+    "reduceEffectsHint": "Turns off blur and glow. Smoother on older phones."
   }
 }

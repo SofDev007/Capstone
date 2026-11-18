@@ -55,9 +55,9 @@ export default function PanicButton({ onTrigger, size = 76, disabled }) {
           accessibilityRole="button"
           accessibilityLabel={t('panic.label')}
           accessibilityHint={t('panic.holdHint')}
-          style={[styles.button, { width: size, height: size, borderRadius: size / 2, backgroundColor: theme.signal, opacity: disabled ? 0.5 : 1 }]}
+          style={[styles.button, { width: size, height: size, borderRadius: size / 2, backgroundColor: theme.signal, shadowColor: theme.signal, opacity: disabled ? 0.5 : 1 }]}
         >
-          <T variant="title" weight={800} color="#FBFBF8" style={{ fontSize: size * 0.27, lineHeight: size * 0.32 }}>{t('panic.sos')}</T>
+          <T variant="title" weight={800} color={theme.onSignal} style={{ fontSize: size * 0.27, lineHeight: size * 0.32 }}>{t('panic.sos')}</T>
         </Pressable>
       </View>
       <T variant="label" color={holding ? theme.signal : theme.inkFaint} style={{ marginTop: -2, textAlign: 'center' }}>

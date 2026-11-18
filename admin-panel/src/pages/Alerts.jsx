@@ -57,7 +57,7 @@ function Detail({ incident, onChanged }) {
       <div className="h-[42%] min-h-[260px] relative border-b border-rule">
         <MapView incidents={loc?.lat != null ? [{ id: incident._id, lat: loc.lat, lng: loc.lng }] : []} trail={trail}
           fitKey={incident._id + (trail?.length || 0)} fitPadding={80} interactiveStops={false} />
-        {trail && <span className="absolute top-3 left-3 stamp bg-counterfoil" style={{ color: '#D0202F' }}>Sharing live location</span>}
+        {trail && <span className="absolute top-3 left-3 stamp bg-counterfoil" style={{ color: '#FF4D6D' }}>Sharing live location</span>}
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
