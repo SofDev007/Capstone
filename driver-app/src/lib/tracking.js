@@ -13,7 +13,8 @@ const QUEUE_MAX = 500;
 export const fromLocation = (loc) => ({
   lat: loc.coords.latitude,
   lng: loc.coords.longitude,
-  speed: Math.max(0, loc.coords.speed || 0),
+  // m/s from the GPS chip; null when the phone doesn't know (-1/null), which is NOT the same as stopped.
+  speed: loc.coords.speed >= 0 ? loc.coords.speed : null,
   heading: Math.max(0, loc.coords.heading || 0),
   timestamp: new Date(loc.timestamp || Date.now()).toISOString()
 });
@@ -68,7 +69,8 @@ export async function sendPoint(tripId, point) {
       tripId,
       coordinates: { lat: point.lat, lng: point.lng },
       speed: point.speed,
-      heading: point.heading
+      heading: point.heading,
+      timestamp: point.timestamp // when the fix was taken: the server measures speed with it
     });
     flushQueue(tripId);
     return res.bus;

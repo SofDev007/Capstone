@@ -25,6 +25,19 @@ import { api, errorText } from '../lib/api';
 import { setActiveTrip, startBackgroundTracking, stopBackgroundTracking, flushQueue, fromLocation } from '../lib/tracking';
 import { useDriverState, useWatchPosition, useTripLoop, useLocationWarnings, useReroute, useOnline, turnOnLocation } from '../lib/hooks';
 
+/**
+ * km/h to show the driver: the phone's own GPS speed from its latest fix (instant and accurate).
+ * The phone only reports a new fix after moving ~5 m, so no fix for 15 s means standing still.
+ * Falls back to the server's figure when the phone can't measure speed (e.g. some browsers).
+ */
+function speedFromFix(position, serverKmh) {
+  if (!position) return serverKmh ?? null;
+  if (Date.now() - new Date(position.timestamp).getTime() > 15000) return 0;
+  if (position.speed == null) return serverKmh ?? null;
+  const kmh = position.speed * 3.6;
+  return kmh < 2 ? 0 : Math.round(kmh); // < 2 km/h: GPS noise while parked
+}
+
 function LocationPill({ on }) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -104,6 +117,7 @@ export default function Home() {
     : 0;
   const nextStop = view?.nextStop;
   const { offRoute, detour } = useReroute({ route: tripActive ? route : null, position: tripActive ? position : null, nextIndex });
+  const speedKmh = speedFromFix(position, view?.speed);
 
   // Resume tracking after an app restart mid-trip.
   useEffect(() => {
@@ -281,7 +295,7 @@ export default function Home() {
               </Glass>
             )}
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <Chip label={t('driver.speedLabel')} value={view?.speed != null ? `${view.speed} km/h` : '–'} />
+              <Chip label={t('driver.speedLabel')} value={speedKmh != null ? `${speedKmh} km/h` : '–'} />
               <Chip label={t('driver.statusLabel')} value={view?.delayMinutes == null ? '–' : late ? t('common.delayed', { count: view.delayMinutes }) : t('common.onTime')}
                 color={view?.delayMinutes == null ? undefined : late ? neon.amber : neon.lime} />
               <Chip label={t('driver.stopLabel')} value={stops.length ? `${Math.min(nextIndex + 1, stops.length)}/${stops.length}` : '–'} />
@@ -321,7 +335,7 @@ export default function Home() {
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 {nextStop && <T variant="small" color={theme.inkSoft}>{t('driver.stopsLeft', { count: stops.length - nextIndex })}</T>}
                 {view?.delayMinutes > 5 && <Stamp kind="delayed">{t('common.delayed', { count: view.delayMinutes })}</Stamp>}
-                {view?.speed != null && <T variant="small" color={theme.inkFaint}>{t('driver.speed', { count: view.speed })}</T>}
+                {speedKmh != null && <T variant="small" color={theme.inkFaint}>{t('driver.speed', { count: speedKmh })}</T>}
               </View>
               {stops.length > 1 && <View style={{ marginTop: 14 }}><StageStrip stops={stops} nextIndex={nextIndex} route={route} /></View>}
             </Ticket>

@@ -26,18 +26,25 @@ const driverTrip = async (req, res, next) => {
 const point = (prefix) => [
   body(`${prefix}lat`).isFloat({ min: -90, max: 90 }),
   body(`${prefix}lng`).isFloat({ min: -180, max: 180 }),
-  body(`${prefix}speed`).optional().isFloat(),
-  body(`${prefix}heading`).optional().isFloat()
+  body(`${prefix}speed`).optional({ values: 'null' }).isFloat(), // m/s; null = the phone doesn't know
+  body(`${prefix}heading`).optional({ values: 'null' }).isFloat()
 ];
+const speedOf = (v) => (v == null ? null : Number(v));
 
-// Live location update (Driver)
-router.post('/', point('coordinates.'), validate, driverTrip, async (req, res) => {
-  const { coordinates, speed, heading } = req.body;
+// Live location update (Driver). `timestamp` = when the phone took the fix (used for speed/distance).
+router.post('/', [
+  ...point('coordinates.'),
+  body('speed').optional({ values: 'null' }).isFloat(),
+  body('heading').optional({ values: 'null' }).isFloat(),
+  body('timestamp').optional().isISO8601()
+], validate, driverTrip, async (req, res) => {
+  const { coordinates, speed, heading, timestamp } = req.body;
   const view = await liveTracker.recordPing(req.tripState, {
     lat: Number(coordinates.lat),
     lng: Number(coordinates.lng),
-    speed: Number(speed) || 0,
-    heading: Number(heading) || 0
+    speed: speedOf(speed),
+    heading: Number(heading) || 0,
+    fixAt: timestamp ? Date.parse(timestamp) : undefined
   });
   res.status(201).json({ message: 'Location updated', bus: view });
 });
@@ -57,7 +64,7 @@ router.post('/batch', [
     const ts = new Date(p.timestamp).getTime();
     if (ts > now + 60000) continue; // clock skew garbage
     await liveTracker.recordPing(req.tripState, {
-      lat: Number(p.lat), lng: Number(p.lng), speed: Number(p.speed) || 0, heading: Number(p.heading) || 0, timestamp: ts
+      lat: Number(p.lat), lng: Number(p.lng), speed: speedOf(p.speed), heading: Number(p.heading) || 0, timestamp: ts
     }, { live: now - ts < 30000 });
   }
   res.status(201).json({ message: 'Locations recorded', count: points.length });

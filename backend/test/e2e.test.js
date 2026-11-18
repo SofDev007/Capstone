@@ -3,6 +3,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { io as ioClient } from 'socket.io-client';
+import { haversine } from '../../shared/geo.js';
 
 const PORT = 5077;
 const BASE = `http://localhost:${PORT}/api`;
@@ -142,6 +143,29 @@ test('full journey: trip, live tracking, incidents, applications, passengers', a
     assert.equal(update.offRoute, false);
   });
 
+  await t.test('speed: the phone GPS speed; else measured between GPS fix times, not arrival times', async () => {
+    const state = await liveTracker.getActiveTrip(login.data.user.id);
+    const ping = (frac, fixSecondsAgo, extra = {}) => call('POST', '/locations', {
+      tripId, coordinates: between(STOP.isbt43, STOP.sec35, frac), timestamp: new Date(Date.now() - fixSecondsAgo * 1000).toISOString(), ...extra
+    }, driver);
+    state.lastFixAt = Date.now() - 60000;
+
+    // No GPS speed: two fixes taken 20 s apart but arriving back to back -> distance / 20 s.
+    let r = await ping(0.54, 25, { speed: null });
+    const a = state.position;
+    r = await ping(0.58, 5, { speed: null });
+    assert.equal(r.status, 201, JSON.stringify(r.data));
+    const expected = Math.round((haversine(a, state.position) / 20) * 3.6);
+    assert.ok(expected > 0);
+    assert.equal(r.data.bus.speed, expected, `measured over the fix interval (${expected} km/h), not the ~0 s arrival gap`);
+
+    r = await ping(0.6, 0, { speed: 12.5 }); // the phone's GPS says 12.5 m/s
+    assert.equal(r.data.bus.speed, 45, 'GPS speed shown as km/h');
+
+    state.lastFixAt = Date.now() - 20000; // no new fix for 20 s: the phone stopped reporting = standing still
+    assert.equal(liveTracker.getLiveBus(busId).speed, 0, 'no fresh fix = 0 km/h');
+  });
+
   await t.test('public endpoints: live buses, nearest stops, arrivals, stop search', async () => {
     const live = await call('GET', `/public/buses/active?route=${route1}`);
     assert.equal(live.data.length, 1);
@@ -261,7 +285,7 @@ test('full journey: trip, live tracking, incidents, applications, passengers', a
   await t.test('offline queue: queued points count for history + distance, are not broadcast live', async () => {
     // Simulate the phone losing signal 10 minutes ago and queueing points every 40 s.
     const state = await liveTracker.getActiveTrip(login.data.user.id);
-    state.lastPingAt = Date.now() - 10 * 60 * 1000;
+    state.lastPingAt = state.lastFixAt = Date.now() - 10 * 60 * 1000; // last ping and its GPS fix
     const distanceBefore = state.totalDistance;
     const start = Date.now() - 5 * 60 * 1000;
     const points = [0, 40, 80].map((s, i) => ({
