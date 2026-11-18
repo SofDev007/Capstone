@@ -14,7 +14,8 @@ import Driver from '../models/Driver.js';
 import { getDirections } from '../services/routing.js';
 import { saveDocument, parseImageDataUrl } from '../services/storage.js';
 
-export const DEMO_DRIVER_PASSWORD = 'Demo@1234';
+// Set DEMO_DRIVER_PASSWORD when seeding a public server: the default is in the README.
+export const DEMO_DRIVER_PASSWORD = process.env.DEMO_DRIVER_PASSWORD || 'Demo@1234';
 
 const STOPS = {
   isbt43: ['ISBT Sector 43', 30.7186, 76.7509],

@@ -3,7 +3,7 @@
 // Usage: node scripts/simulate.js [apiBase=http://localhost:5000/api] [driverCount=12]
 import { buildPathIndex, pointAtDistance } from '../../shared/geo.js';
 
-const PASSWORD = 'Demo@1234';
+const PASSWORD = process.env.DEMO_DRIVER_PASSWORD || 'Demo@1234';
 const demoDrivers = (n) => Array.from({ length: n }, (_, i) => `demo.driver${i + 1}@transit.local`);
 
 async function call(api, method, path, body, token) {
