@@ -377,7 +377,13 @@ test('full journey: trip, live tracking, incidents, applications, passengers', a
     const gen = await call('POST', `/transit/routes/${route.data._id}/generate-path`, {}, admin);
     assert.equal(gen.data.source, 'straight');
     assert.equal(gen.data.route.path.coordinates.length, 2);
-    assert.ok(gen.data.route.stops[1].offsetMinutes > 0);
+    assert.ok(gen.data.route.stops[1].offsetMinutes > 0, 'a route without times gets them from the travel time');
+    const timed = await call('PUT', `/transit/routes/${route.data._id}`, { number: '99', name: 'Test', departures: ['08:00', '09:00'],
+      stops: [{ stop: a.data._id, offsetMinutes: 0 }, { stop: b.data._id, offsetMinutes: 42 }] }, admin);
+    assert.equal(timed.status, 200, JSON.stringify(timed.data));
+    const regen = await call('POST', `/transit/routes/${route.data._id}/generate-path`, {}, admin);
+    assert.equal(regen.data.route.stops[1].offsetMinutes, 42, 'regenerating the path keeps an existing timetable');
+    assert.equal(regen.data.offsetsUpdated, false);
     assert.equal((await call('DELETE', `/transit/stops/${a.data._id}`, null, admin)).status, 400, 'stop in use');
     const journey = await call('GET', '/public/journey?fromLat=30.70&fromLng=76.70&toLat=30.71&toLng=76.71');
     assert.ok(journey.data.options.some((o) => o.legs.some((l) => l.route?.number === '99')), 'planner sees the new route');
