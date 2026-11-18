@@ -64,7 +64,11 @@ async function orsChunk(points) {
     body: JSON.stringify({ coordinates: points.map((p) => [p.lng, p.lat]), instructions: true }),
     signal: AbortSignal.timeout(15000)
   });
-  if (!res.ok) throw new Error(`OpenRouteService ${res.status}`);
+  if (!res.ok) {
+    // ORS explains itself, e.g. "Could not find routable point within a radius of 350 m of coordinate 3".
+    const detail = await res.json().then((b) => b?.error?.message || b?.error).catch(() => '');
+    throw new Error(`OpenRouteService ${res.status}${detail ? `: ${detail}` : ''}`);
+  }
   const feature = (await res.json()).features?.[0];
   if (!feature) throw new Error('OpenRouteService returned no route');
   const coordinates = feature.geometry.coordinates;
@@ -106,15 +110,18 @@ export async function getDirections(points) {
   const cached = directionsCache.get(key);
   if (cached) return cached;
 
-  let result = null;
   if (process.env.ORS_API_KEY) {
     try {
-      result = await orsDirections(points);
+      const result = await orsDirections(points);
+      directionsCache.set(key, result, 6 * 60 * 60 * 1000);
+      return result;
     } catch (error) {
+      // Not cached: a rate limit or a bad key must not pin straight lines for hours.
       console.warn('Routing failed, using straight lines:', error.message);
+      return { ...straightDirections(points), routingError: error.message };
     }
   }
-  result ||= straightDirections(points);
+  const result = straightDirections(points);
   directionsCache.set(key, result, 6 * 60 * 60 * 1000);
   return result;
 }

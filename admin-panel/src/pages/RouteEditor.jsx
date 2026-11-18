@@ -119,11 +119,12 @@ export default function RouteEditor() {
     if (!id) return;
     setBusy(true);
     try {
-      const res = await transitAPI.generatePath(id);
+      const { source, distance, offsetsUpdated, routingError } = (await transitAPI.generatePath(id)).data;
       await openRoute(id);
-      toast.success(res.data.source === 'routing'
-        ? `Road path generated (${(res.data.distance / 1000).toFixed(1)} km) and stop times updated`
-        : 'Path drawn as straight lines — add an OpenRouteService key on the server for real roads');
+      const times = offsetsUpdated ? ' and stop times filled in' : '; timetable kept';
+      if (source === 'routing') toast.success(`Road path generated (${(distance / 1000).toFixed(1)} km)${times}`);
+      else if (routingError) toast.error(`Road routing failed, kept straight lines: ${routingError}`);
+      else toast.success('Path drawn as straight lines — add an OpenRouteService key on the server for real roads');
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
@@ -271,7 +272,7 @@ export default function RouteEditor() {
               )}
               {pathIsStale && (
                 <p className="text-[13.5px] mt-2 p-2.5 rounded-sm bg-buff text-buff-ink">
-                  {savedPath?.source === 'routing' ? 'Stops changed — regenerate the road path.' : 'The map shows straight lines between stops. Generate the road path for real roads and stop times.'}
+                  {savedPath?.source === 'routing' ? 'Stops changed — regenerate the road path.' : 'The map shows straight lines between stops. Generate the road path to follow the real roads.'}
                 </p>
               )}
             </div>

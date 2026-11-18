@@ -144,8 +144,9 @@ router.delete('/routes/:id', async (req, res) => {
 });
 
 /**
- * Generate the road path through all stops (OpenRouteService, or straight lines without a key)
- * and suggest scheduled offsets from the travel times (+30 s dwell per stop).
+ * Generate the road path through all stops (OpenRouteService, or straight lines without a key).
+ * Stop times are filled from the travel times (+30 s dwell per stop) only for a route that has none
+ * yet, or with updateOffsets: true; a route's timetable (e.g. imported from a CSV) is kept.
  */
 router.post('/routes/:id/generate-path', [body('updateOffsets').optional().isBoolean()], validate, async (req, res) => {
   const route = await populateRoute(Route.findById(req.params.id));
@@ -158,7 +159,8 @@ router.post('/routes/:id/generate-path', [body('updateOffsets').optional().isBoo
   const directions = await getDirections(points);
   route.path = { type: 'LineString', coordinates: directions.coordinates };
   route.pathSource = directions.source;
-  if (req.body.updateOffsets !== false) {
+  const updateOffsets = req.body.updateOffsets ?? route.stops.every((s) => !s.offsetMinutes);
+  if (updateOffsets) {
     let minutes = 0;
     route.stops.forEach((s, i) => {
       if (i > 0) minutes += (directions.legs[i - 1]?.duration || 0) / 60 + 0.5;
@@ -167,7 +169,11 @@ router.post('/routes/:id/generate-path', [body('updateOffsets').optional().isBoo
   }
   await route.save();
   changed(route._id);
-  res.json({ route: await populateRoute(Route.findById(route._id)), source: directions.source, distance: directions.distance });
+  res.json({
+    route: await populateRoute(Route.findById(route._id)),
+    source: directions.source, distance: directions.distance, offsetsUpdated: updateOffsets,
+    routingError: directions.routingError // set when a key is configured but OpenRouteService refused
+  });
 });
 
 export default router;
