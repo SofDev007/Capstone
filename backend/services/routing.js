@@ -7,6 +7,7 @@ const PHOTON_URL = 'https://photon.komoot.io/api/';
 const INDIA_BBOX = '68.1,6.5,97.5,35.7';
 const USER_AGENT = 'TransitTracker/1.0 (bus tracking app)';
 const ORS_MAX_WAYPOINTS = 50;
+const SNAP_RADIUS_M = 1000;
 const FALLBACK_SPEED_MS = 5.5; // ~20 km/h city bus
 const DETOUR = 1.3;
 
@@ -61,7 +62,9 @@ async function orsChunk(points) {
       'Content-Type': 'application/json',
       Accept: 'application/geo+json'
     },
-    body: JSON.stringify({ coordinates: points.map((p) => [p.lng, p.lat]), instructions: true }),
+    // radiuses: snap each stop to a road within 1 km (default 350 m), so a stop placed a little off the
+    // road (e.g. an estimated position) still routes instead of turning the whole route into straight lines.
+    body: JSON.stringify({ coordinates: points.map((p) => [p.lng, p.lat]), radiuses: points.map(() => SNAP_RADIUS_M), instructions: true }),
     signal: AbortSignal.timeout(15000)
   });
   if (!res.ok) {
@@ -87,7 +90,12 @@ async function orsDirections(points) {
   // ORS accepts at most 50 waypoints per request: chunk with 1-point overlap.
   const result = { coordinates: [], legs: [], steps: [] };
   for (let start = 0; start < points.length - 1; start += ORS_MAX_WAYPOINTS - 1) {
-    const chunk = await orsChunk(points.slice(start, start + ORS_MAX_WAYPOINTS));
+    const chunk = await orsChunk(points.slice(start, start + ORS_MAX_WAYPOINTS)).catch((error) => {
+      // "...of specified coordinate 2: ..." -> which of our points (0-based) the problem is.
+      const n = /coordinate (\d+)/.exec(error.message)?.[1];
+      if (n != null) error.pointIndex = start + Number(n);
+      throw error;
+    });
     result.coordinates.push(...(result.coordinates.length ? chunk.coordinates.slice(1) : chunk.coordinates));
     result.legs.push(...chunk.legs);
     result.steps.push(...chunk.steps);
@@ -118,7 +126,7 @@ export async function getDirections(points) {
     } catch (error) {
       // Not cached: a rate limit or a bad key must not pin straight lines for hours.
       console.warn('Routing failed, using straight lines:', error.message);
-      return { ...straightDirections(points), routingError: error.message };
+      return { ...straightDirections(points), routingError: error.message, routingErrorPoint: error.pointIndex };
     }
   }
   const result = straightDirections(points);

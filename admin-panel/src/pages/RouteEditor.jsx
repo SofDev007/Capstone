@@ -22,17 +22,30 @@ function generateDepartures(from, to, every) {
   return out;
 }
 
+// "22.66026, 75.88017" (as Google Maps copies it) -> { lat, lng }; null unless inside India.
+function parseLatLng(text) {
+  const [lat, lng] = String(text).split(/[\s,]+/).filter(Boolean).map(Number);
+  return lat >= 6 && lat <= 37 && lng >= 68 && lng <= 98 ? { lat, lng } : null;
+}
+
 function StopDialog({ open, initial, onClose, onSaved }) {
   const [name, setName] = useState('');
+  const [where, setWhere] = useState('');
   const [busy, setBusy] = useState(false);
-  useEffect(() => { setName(initial?.name || ''); }, [initial]);
+  useEffect(() => {
+    setName(initial?.name || '');
+    setWhere(initial ? `${initial.lat?.toFixed(6)}, ${initial.lng?.toFixed(6)}` : '');
+  }, [initial]);
+  const place = parseLatLng(where);
+  const moved = Boolean(initial?._id && place && (place.lat.toFixed(6) !== initial.lat.toFixed(6) || place.lng.toFixed(6) !== initial.lng.toFixed(6)));
   const save = async () => {
     setBusy(true);
     try {
-      const payload = { name: name.trim(), lat: initial.lat, lng: initial.lng };
+      const payload = { name: name.trim(), ...place };
       const res = initial._id ? await transitAPI.updateStop(initial._id, payload) : await transitAPI.createStop(payload);
       onSaved(res.data);
-      toast.success(initial._id ? 'Stop renamed' : `Stop “${res.data.name}” added`);
+      toast.success(!initial._id ? `Stop “${res.data.name}” added`
+        : moved ? 'Stop moved — generate the road path again for routes that use it' : 'Stop saved');
     } catch (e) {
       toast.error(errorMessage(e));
     } finally {
@@ -43,15 +56,18 @@ function StopDialog({ open, initial, onClose, onSaved }) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{initial?._id ? 'Rename stop' : 'New stop here'}</DialogTitle>
-          {initial && <DialogDescription>{initial.lat?.toFixed(5)}, {initial.lng?.toFixed(5)}</DialogDescription>}
+          <DialogTitle>{initial?._id ? 'Edit stop' : 'New stop here'}</DialogTitle>
+          {initial && <DialogDescription>{initial._id ? 'Rename it, or paste its exact location to move it.' : `${initial.lat?.toFixed(5)}, ${initial.lng?.toFixed(5)}`}</DialogDescription>}
         </DialogHeader>
-        <Field label="Stop name" hint="Use the name people say at the roadside, e.g. “Sector 22 Aroma Chowk”.">
-          <input className="field" value={name} onChange={(e) => setName(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && name.trim().length >= 2 && save()} />
+        <Field label="Stop name" hint="Use the name people say at the roadside, e.g. “Rajwada” or “Palasia Square”.">
+          <input className="field" value={name} onChange={(e) => setName(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && name.trim().length >= 2 && place && save()} />
+        </Field>
+        <Field label="Location (latitude, longitude)" hint={place ? 'In Google Maps, right-click the bus stop and click the numbers to copy them, then paste here.' : 'Paste it as “22.71960, 75.85770” (a place in India).'}>
+          <input className="field font-mono" value={where} onChange={(e) => setWhere(e.target.value)} inputMode="decimal" spellCheck={false} />
         </Field>
         <DialogFooter>
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="btn btn-primary" disabled={busy || name.trim().length < 2} onClick={save}>Save stop</button>
+          <button type="button" className="btn btn-primary" disabled={busy || name.trim().length < 2 || !place} onClick={save}>Save stop</button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -214,7 +230,7 @@ export default function RouteEditor() {
                     <li key={s._id} className="flex items-center gap-2 py-2.5">
                       <span className="hole" />
                       <span className="flex-1 truncate">{s.name}</span>
-                      <button type="button" className="btn btn-sm btn-ghost" onClick={() => setStopDialog({ _id: s._id, name: s.name, ...lngLat(s) })}>Rename</button>
+                      <button type="button" className="btn btn-sm btn-ghost" onClick={() => setStopDialog({ _id: s._id, name: s.name, ...lngLat(s) })}>Edit</button>
                       <button type="button" className="p-2 rounded-sm text-ink-faint hover:text-signal hover:bg-signal-stock" aria-label={`Delete ${s.name}`} onClick={() => removeStop(s)}><Trash2 size={16} /></button>
                     </li>
                   ))}
