@@ -143,6 +143,14 @@ router.delete('/routes/:id', async (req, res) => {
   res.json({ message: 'Route deleted' });
 });
 
+// "Orient College (stop 3) is more than 1 km from a road …" instead of ORS's "specified coordinate 2".
+function routingErrorText({ routingError, routingErrorPoint }, stops) {
+  if (!routingError) return undefined;
+  const stop = stops[routingErrorPoint];
+  if (!stop) return routingError;
+  return `${stop.name} (stop ${routingErrorPoint + 1}) is more than 1 km from any road OpenRouteService can drive. Move it onto its road in the Stops tab, then generate again.`;
+}
+
 /**
  * Generate the road path through all stops (OpenRouteService, or straight lines without a key).
  * Stop times are filled from the travel times (+30 s dwell per stop) only for a route that has none
@@ -151,9 +159,8 @@ router.delete('/routes/:id', async (req, res) => {
 router.post('/routes/:id/generate-path', [body('updateOffsets').optional().isBoolean()], validate, async (req, res) => {
   const route = await populateRoute(Route.findById(req.params.id));
   if (!route) return res.status(404).json({ message: 'Route not found' });
-  const points = route.stops.filter((s) => s.stop).map((s) => ({
-    lat: s.stop.location.coordinates[1], lng: s.stop.location.coordinates[0]
-  }));
+  const stops = route.stops.filter((s) => s.stop).map((s) => s.stop);
+  const points = stops.map((s) => ({ lat: s.location.coordinates[1], lng: s.location.coordinates[0] }));
   if (points.length < 2) return res.status(400).json({ message: 'Add at least two stops first' });
 
   const directions = await getDirections(points);
@@ -172,7 +179,7 @@ router.post('/routes/:id/generate-path', [body('updateOffsets').optional().isBoo
   res.json({
     route: await populateRoute(Route.findById(route._id)),
     source: directions.source, distance: directions.distance, offsetsUpdated: updateOffsets,
-    routingError: directions.routingError // set when a key is configured but OpenRouteService refused
+    routingError: routingErrorText(directions, stops) // set when a key is configured but OpenRouteService refused
   });
 });
 
