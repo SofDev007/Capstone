@@ -202,7 +202,7 @@ export default function LiveMap() {
     if (!loc) return null;
     const eta = b.live?.nextStop?.etaMinutes;
     return {
-      id: b._id, lat: loc.lat, lng: loc.lng, label: b.busNumber,
+      id: b._id, lat: loc.lat, lng: loc.lng, label: b.busNumber, path: routes[b.route?._id]?.path,
       color: neonForRoute(b.route), selected: b._id === selectedId,
       alert: b.status === 'breakdown' || sos?.busId === b._id, stale: !replayAt && ageSeconds(b.live.lastUpdate) > 60,
       chip: !replayAt && eta != null ? { route: b.route?.number ?? b.busNumber, text: `${eta} min`, priority: (b._id === selectedId ? -1 : 0) + attentionRank(b) } : null

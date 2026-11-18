@@ -1,8 +1,44 @@
 // Night Glass map helpers for MapLibre, shared by the admin MapView and the apps' DOM map components
 // (PassengerMap, RouteMap). Plain DOM + MapLibre API: no React, no imports of maplibre itself.
 // See DESIGN.md › Night Glass for the visual spec.
+import { buildPathIndex, projectOntoPath, pointAtDistance, subPath } from './geo.js';
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
+
+// ─── Buses on their route ────────────────────────────────────────────────────────────────────
+// A bus is drawn ON its route polyline: each GPS fix is projected onto the route and the marker moves
+// by distance along it, so it follows every bend. A fix further than SNAP_METERS from the route is a
+// bus that really is off its route; it is drawn at its raw GPS position (never hidden, never faked).
+export const SNAP_METERS = 100;
+const BACKTRACK_METERS = 50; // GPS jitter backwards; more than this = a new trip from the first stop
+/** Content key of a route path ('' if none). DOM-component props arrive as new arrays, so compare these, not references. */
+export const pathKey = (path) => (Array.isArray(path) && path.length > 1 ? `${path.length}|${path[0]}|${path[path.length - 1]}` : '');
+const indexes = new Map(); // path key -> index
+function indexFor(path) {
+  const key = pathKey(path);
+  if (!key) return null;
+  let index = indexes.get(key);
+  if (!index) {
+    if (indexes.size > 64) indexes.clear();
+    index = buildPathIndex(path);
+    indexes.set(key, index);
+  }
+  return index;
+}
+
+/**
+ * Where to draw a GPS fix [lng, lat] on `path`: { index, along, lngLat } on the route, or null when
+ * the path is unknown or the fix is more than SNAP_METERS away. minAlong prefers forward matches
+ * on routes that pass the same street twice.
+ */
+export function placeOnRoute(path, lngLat, minAlong = 0) {
+  const index = indexFor(path);
+  if (!index) return null;
+  const hit = projectOntoPath(index, { lat: lngLat[1], lng: lngLat[0] }, Math.max(0, minAlong));
+  if (!hit || hit.offset > SNAP_METERS) return null;
+  const p = pointAtDistance(index, hit.along);
+  return { index, along: hit.along, lngLat: [p.lng, p.lat] };
+}
 
 export const NIGHT_MAP = {
   bg: '#0A0F1C',
@@ -178,30 +214,75 @@ export function watchChips(map) {
   return () => { map.off('render', schedule); clearTimeout(timer); };
 }
 
-/** Glide a marker to `to` over `ms` (ease-out cubic); jumps under reduced motion. onFrame(lngLat) each step. */
-export function glideMarker(entry, to, { ms = 1000, reduceMotion = prefersReducedMotion(), onFrame } = {}) {
+/**
+ * Move a marker to the GPS fix `to` over `ms` (ease-out cubic); jumps under reduced motion.
+ * With `path` (the bus's route), the marker is placed on the route and travels along it, following
+ * every bend; a big step backwards (new trip) jumps instead of driving the route in reverse.
+ * Without a path, or for a fix > SNAP_METERS off the route, it glides straight to the raw fix.
+ * entry: { marker, raf, onRoute } (onRoute is kept up to date here).
+ * onFrame(lngLat, onRoute) each step; onRoute = { index, along } or null.
+ */
+export function glideMarker(entry, to, { ms = 1000, reduceMotion = prefersReducedMotion(), onFrame, path } = {}) {
   cancelAnimationFrame(entry.raf);
+  const prev = entry.onRoute;
+  const pathIndex = indexFor(path);
+  const sameRoute = Boolean(prev && pathIndex && prev.index === pathIndex);
+  const dest = pathIndex ? placeOnRoute(path, to, sameRoute ? prev.along - BACKTRACK_METERS : 0) : null;
+
+  if (dest) {
+    const startAlong = sameRoute ? prev.along : placeOnRoute(path, entry.marker.getLngLat().toArray())?.along;
+    if (reduceMotion || startAlong == null || dest.along < startAlong - BACKTRACK_METERS) {
+      entry.onRoute = { index: dest.index, along: dest.along };
+      entry.marker.setLngLat(dest.lngLat);
+      onFrame?.(dest.lngLat, entry.onRoute);
+      return;
+    }
+    const start = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / ms);
+      const along = startAlong + (dest.along - startAlong) * (1 - Math.pow(1 - t, 3));
+      const pt = pointAtDistance(dest.index, along);
+      const p = [pt.lng, pt.lat];
+      entry.onRoute = { index: dest.index, along };
+      entry.marker.setLngLat(p);
+      onFrame?.(p, entry.onRoute);
+      if (t < 1) entry.raf = requestAnimationFrame(step);
+    };
+    entry.raf = requestAnimationFrame(step);
+    return;
+  }
+
+  // Route not loaded yet, or the bus is genuinely off its route: show the raw fix.
+  entry.onRoute = null;
   const from = entry.marker.getLngLat().toArray();
-  if (reduceMotion) { entry.marker.setLngLat(to); onFrame?.(to); return; }
+  if (reduceMotion) { entry.marker.setLngLat(to); onFrame?.(to, null); return; }
   const start = performance.now();
   const step = (now) => {
     const t = Math.min(1, (now - start) / ms);
     const e = 1 - Math.pow(1 - t, 3);
     const p = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
     entry.marker.setLngLat(p);
-    onFrame?.(p);
+    onFrame?.(p, null);
     if (t < 1) entry.raf = requestAnimationFrame(step);
   };
   entry.raf = requestAnimationFrame(step);
 }
 
+/** Initial marker position for a new bus: on its route when possible. Sets entry.onRoute. */
+export function startOnRoute(entry, lngLat, path) {
+  const at = placeOnRoute(path, lngLat);
+  entry.onRoute = at && { index: at.index, along: at.along };
+  return at ? at.lngLat : lngLat;
+}
+
 // ─── Light trails ──────────────────────────────────────────────────────────────────────────
 /**
- * Each bus leaves a light trail: its last `max` GPS points + its current (gliding) position,
- * drawn with a line-gradient (transparent → route colour). line-gradient can't be data-driven,
- * so there is one layer per colour, created on first use.
+ * Each bus leaves a light trail drawn with a line-gradient (transparent → route colour):
+ * on its route, the last `length` metres of the route behind the marker (so the trail bends with
+ * the road); off its route, its last `max` GPS points + its current (gliding) position.
+ * line-gradient can't be data-driven, so there is one layer per colour, created on first use.
  */
-export function createTrails(map, { max = 12, before } = {}) {
+export function createTrails(map, { max = 12, length = 400, before } = {}) {
   const source = 'ng-trails';
   map.addSource(source, { type: 'geojson', lineMetrics: true, data: EMPTY });
   const buses = new Map(); // id -> { pts: [[lng,lat]], head: [lng,lat], color }
@@ -224,7 +305,9 @@ export function createTrails(map, { max = 12, before } = {}) {
   const render = () => {
     const features = [];
     for (const b of buses.values()) {
-      const coords = [...b.pts, ...(b.head ? [b.head] : [])];
+      const coords = b.onRoute
+        ? subPath(b.onRoute.index, b.onRoute.along - length, b.onRoute.along)
+        : [...b.pts, ...(b.head ? [b.head] : [])];
       if (coords.length < 2) continue;
       ensureLayer(b.color);
       features.push({ type: 'Feature', properties: { color: b.color }, geometry: { type: 'LineString', coordinates: coords } });
@@ -254,10 +337,14 @@ export function createTrails(map, { max = 12, before } = {}) {
       b.target = lngLat;
       touch();
     },
-    /** The marker's animated position (so the trail stays attached while it glides). */
-    head(id, lngLat) {
+    /** The marker's animated position (so the trail stays attached while it glides); onRoute from glideMarker. */
+    head(id, lngLat, onRoute = null) {
       const b = buses.get(id);
-      if (b) { b.head = lngLat; touch(); }
+      if (!b) return;
+      if (b.onRoute && !onRoute) b.pts = []; // left the route: start a fresh GPS trail
+      b.head = lngLat;
+      b.onRoute = onRoute && { ...onRoute };
+      touch();
     },
     remove(id) { if (buses.delete(id)) touch(); },
     clear() { buses.clear(); touch(); },
