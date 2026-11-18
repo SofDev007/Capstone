@@ -5,7 +5,7 @@
 // (no flow dashes, no pulsing rings) — only the bus marker moves, and only when the bus does.
 import { useEffect, useRef, useState } from 'react';
 import { MAP_STYLE_URL, MAP_STYLE_DARK_URL, INDIA_VIEW, loadMapLibre } from 'transit-shared/mapConfig.js';
-import { applyNightGlassStyle, addNeonRouteLayers, injectNeonMapCss } from 'transit-shared/neonMap.js';
+import { applyNightGlassStyle, addNeonRouteLayers, injectNeonMapCss, glideMarker, startOnRoute, placeOnRoute } from 'transit-shared/neonMap.js';
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
 let maplibregl; // set by loadMapLibre(); see mapConfig.js for why it isn't imported
@@ -17,7 +17,7 @@ export default function RouteMap({ path = [], stops = [], nextIndex = 0, positio
   const map = useRef(null);
   const loaded = useRef(false);
   const marker = useRef(null);
-  const glide = useRef(0);
+  const bus = useRef({ raf: 0, onRoute: null }); // glideMarker entry for the bus marker
   const latest = useRef({});
   latest.current = { path, stops, nextIndex, detour, ink, position };
 
@@ -99,37 +99,30 @@ export default function RouteMap({ path = [], stops = [], nextIndex = 0, positio
 
   useEffect(paint, [path, stops, nextIndex, detour, ink, ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Bus marker: glides between fixes; camera follows.
+  // Bus marker: drawn on the route and gliding along it (on a detour: the raw GPS); camera follows.
   useEffect(() => {
     const m = map.current;
     if (!m || !position) return;
+    const routePath = detour ? null : path;
+    const to = [position.lng, position.lat];
     if (!marker.current) {
       const dot = document.createElement('div');
       dot.style.cssText = night
         ? `width:30px;height:30px;border-radius:50%;background:${ink};border:3px solid #FFFFFF;box-shadow:0 0 16px ${ink};display:grid;place-items:center;`
         : `width:30px;height:30px;border-radius:50%;background:#16213E;border:4px solid ${stock};box-shadow:0 4px 12px rgba(22,33,62,.45);display:grid;place-items:center;`;
       dot.innerHTML = `<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid ${night ? '#04060C' : '#FBFBF8'};margin-top:-2px"></div>`;
-      marker.current = new maplibregl.Marker({ element: dot, rotationAlignment: 'map' }).setLngLat([position.lng, position.lat]).addTo(m);
-      m.jumpTo({ center: [position.lng, position.lat], zoom: 15.5 });
+      cancelAnimationFrame(bus.current.raf);
+      bus.current = { raf: 0, onRoute: null };
+      const start = startOnRoute(bus.current, to, routePath);
+      marker.current = new maplibregl.Marker({ element: dot, rotationAlignment: 'map' }).setLngLat(start).addTo(m);
+      bus.current.marker = marker.current;
+      m.jumpTo({ center: start, zoom: 15.5 });
     }
     marker.current.setRotation(position.heading || 0);
-    const from = marker.current.getLngLat().toArray();
-    const to = [position.lng, position.lat];
-    cancelAnimationFrame(glide.current);
-    if (reduceMotion) {
-      marker.current.setLngLat(to);
-    } else {
-      const start = performance.now();
-      const step = (now) => {
-        const t = Math.min(1, (now - start) / 900);
-        const e = 1 - Math.pow(1 - t, 3);
-        marker.current.setLngLat([from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e]);
-        if (t < 1) glide.current = requestAnimationFrame(step);
-      };
-      glide.current = requestAnimationFrame(step);
-    }
-    if (follow) m.easeTo({ center: to, zoom: Math.max(m.getZoom(), 15), duration: reduceMotion ? 0 : 900, easing: (x) => 1 - Math.pow(1 - x, 3) });
-  }, [position, follow, stock, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+    glideMarker(bus.current, to, { ms: 900, reduceMotion, path: routePath });
+    const shown = placeOnRoute(routePath, to)?.lngLat || to;
+    if (follow) m.easeTo({ center: shown, zoom: Math.max(m.getZoom(), 15), duration: reduceMotion ? 0 : 900, easing: (x) => 1 - Math.pow(1 - x, 3) });
+  }, [position, follow, stock, ready, detour]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     // absolute: fills the webview on phones, and the parent View on web (where DOM components render inline)

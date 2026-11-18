@@ -9,7 +9,7 @@ import { MAP_STYLE_DARK_URL, INDIA_VIEW } from '@shared/mapConfig.js';
 import { neon, glass } from '@shared/theme/tokens.js';
 import {
   applyNightGlassStyle, addNeonRouteLayers, animateFlow, injectNeonMapCss, createBusMarkerEl, updateBusMarkerEl,
-  glideMarker, createTrails, watchChips, prefersReducedMotion
+  glideMarker, startOnRoute, pathKey, createTrails, watchChips, prefersReducedMotion
 } from '@shared/neonMap.js';
 import { cn } from '@/lib/utils';
 
@@ -106,7 +106,10 @@ export default function MapView({
       map.getSource('routes').setData(routesGeoJSON(r));
       map.getSource('stops').setData(stopsGeoJSON(s));
       map.getSource('trail').setData(t?.length > 1 ? { type: 'Feature', geometry: { type: 'LineString', coordinates: t } } : EMPTY);
-      for (const [id, e] of busMarkers.current) trails.current.push(id, e.pos, e.color);
+      for (const [id, e] of busMarkers.current) {
+        trails.current.push(id, e.pos, e.color);
+        trails.current.head(id, e.marker.getLngLat().toArray(), e.onRoute);
+      }
       map.fire('data-ready');
     });
     map.on('click', (e) => {
@@ -147,7 +150,7 @@ export default function MapView({
     }
   }, [trail]);
 
-  // Neon bus markers: glide between positions, leave a light trail.
+  // Neon bus markers: on their route (bus.path), gliding along it, leaving a light trail.
   useEffect(() => {
     const map = mapRef.current;
     const seen = new Set();
@@ -157,10 +160,11 @@ export default function MapView({
       let entry = busMarkers.current.get(bus.id);
       if (!entry) {
         const el = createBusMarkerEl(() => handlers.current.onBusClick?.(entry.id));
-        const marker = new maplibregl.Marker({ element: el }).setLngLat([bus.lng, bus.lat]).addTo(map);
-        entry = { id: bus.id, el, marker, pos: [bus.lng, bus.lat], raf: 0, color: bus.color };
+        entry = { id: bus.id, el, pos: [bus.lng, bus.lat], raf: 0, color: bus.color, pathKey: pathKey(bus.path) };
+        entry.marker = new maplibregl.Marker({ element: el }).setLngLat(startOnRoute(entry, entry.pos, bus.path)).addTo(map);
         busMarkers.current.set(bus.id, entry);
         trails.current?.push(bus.id, entry.pos, bus.color || neon.cyan);
+        trails.current?.head(bus.id, entry.marker.getLngLat().toArray(), entry.onRoute);
       }
       const color = bus.alert ? neon.alert : bus.color || neon.cyan;
       entry.color = color;
@@ -168,10 +172,13 @@ export default function MapView({
       entry.marker.getElement().style.zIndex = bus.selected || bus.alert ? '3' : '2';
 
       const target = [bus.lng, bus.lat];
-      if (target[0] !== entry.pos[0] || target[1] !== entry.pos[1]) {
+      const key = pathKey(bus.path);
+      const pathChanged = key !== entry.pathKey; // e.g. the route geometry arrived after the bus
+      if (target[0] !== entry.pos[0] || target[1] !== entry.pos[1] || pathChanged) {
         entry.pos = target;
+        entry.pathKey = key;
         trails.current?.push(bus.id, target, color);
-        glideMarker(entry, target, { ms: GLIDE_MS, onFrame: (p) => trails.current?.head(bus.id, p) });
+        glideMarker(entry, target, { ms: GLIDE_MS, path: bus.path, onFrame: (p, onRoute) => trails.current?.head(bus.id, p, onRoute) });
       }
     }
     for (const [id, entry] of busMarkers.current) {

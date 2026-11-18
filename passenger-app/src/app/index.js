@@ -168,6 +168,17 @@ export default function Home() {
     getRoute(bus.routeId).then(setBusRoute).catch(() => setBusRoute(null));
   }, [bus?.routeId, getRoute]);
 
+  // Route geometry of every live bus, so the map can keep each bus on its own route line.
+  const [busPaths, setBusPaths] = useState({});
+  const busRouteIds = [...new Set(buses.map((b) => b.routeId).filter(Boolean))].sort().join(',');
+  useEffect(() => {
+    let alive = true;
+    busRouteIds.split(',').filter(Boolean).forEach((id) => {
+      getRoute(id).then((r) => alive && r?.path?.length > 1 && setBusPaths((p) => (p[id] ? p : { ...p, [id]: r.path }))).catch(() => {});
+    });
+    return () => { alive = false; };
+  }, [busRouteIds, getRoute]);
+
   // ---------- Map data ----------
   const optionRoutes = new Set(option?.legs.filter((l) => l.type === 'ride').map((l) => l.route.id));
   // ETA chips: buses relevant to the selected journey (their boarding stop) or to the nearest stop.
@@ -176,7 +187,7 @@ export default function Home() {
     const eta = chipStopId ? b.etas?.find((e) => e.stopId === chipStopId) : null;
     const relevant = option ? optionRoutes.has(b.routeId) : Boolean(eta);
     return {
-      id: b.busId, lat: b.location.lat, lng: b.location.lng, label: b.busNumber, relevant,
+      id: b.busId, lat: b.location.lat, lng: b.location.lng, label: b.busNumber, relevant, path: busPaths[b.routeId],
       stock: routeStock(busRouteObj(b)).stock, color: neonForRoute(busRouteObj(b)), selected: b.busId === busId,
       dim: (option && !optionRoutes.has(b.routeId)) || ageSec(b.lastUpdate) > 120,
       chip: eta && relevant ? { route: b.routeNumber ?? b.busNumber, text: t('common.minutes', { count: Math.max(0, eta.minutes) }), priority: eta.minutes } : null

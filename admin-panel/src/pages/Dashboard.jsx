@@ -56,9 +56,9 @@ export default function Dashboard() {
 
   const mapRoutes = useMemo(() => Object.values(routes).map((r) => ({ id: r._id, coordinates: r.path, color: neonForRoute(r) })), [routes]);
   const mapBuses = useMemo(() => fleet.filter((b) => b.live?.location).map((b) => ({
-    id: b._id, lat: b.live.location.lat, lng: b.live.location.lng, label: b.busNumber,
+    id: b._id, lat: b.live.location.lat, lng: b.live.location.lng, label: b.busNumber, path: routes[b.route?._id]?.path,
     color: neonForRoute(b.route), alert: b.status === 'breakdown', stale: ageSeconds(b.live.lastUpdate) > 60
-  })), [fleet]);
+  })), [fleet, routes]);
   const fitKey = `${mapRoutes.length}`;
 
   const today = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });

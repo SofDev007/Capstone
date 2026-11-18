@@ -81,6 +81,21 @@ export function pointAtDistance(index, along) {
   return { lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t };
 }
 
+/** The part of an indexed path between two distances along it (clamped), as [[lng, lat], ...]. */
+export function subPath(index, from, to) {
+  if (!index) return [];
+  const a = Math.max(0, Math.min(from, to));
+  const b = Math.min(index.total, Math.max(from, to));
+  const start = pointAtDistance(index, a);
+  const end = pointAtDistance(index, b);
+  const out = [[start.lng, start.lat]];
+  for (let i = 1; i < index.points.length - 1; i++) {
+    if (index.cumulative[i] > a && index.cumulative[i] < b) out.push([index.points[i].lng, index.points[i].lat]);
+  }
+  out.push([end.lng, end.lat]);
+  return out;
+}
+
 /** The part of a path between two points (e.g. boarding and alighting stops), as [[lng, lat], ...]. */
 export function slicePath(coordinates, from, to) {
   const index = buildPathIndex(coordinates);

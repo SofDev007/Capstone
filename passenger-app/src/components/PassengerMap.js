@@ -1,6 +1,7 @@
 'use dom';
 // Passenger map (MapLibre in an Expo DOM component). Everything is plain data so updates are in place.
-//   buses:  [{ id, lat, lng, label, stock, color, selected, dim, chip: { route, text, priority } | null }]
+//   buses:  [{ id, lat, lng, label, stock, color, selected, dim, path, chip: { route, text, priority } | null }]
+//           path = the bus's route polyline: the marker is drawn on it and moves along it (neonMap.glideMarker)
 //   lines:  [{ id, coordinates, color, dashed, width }]   route segments and walking legs
 //   stops:  [{ id, lat, lng, name, color, big }]
 //   me:     { lat, lng } | null       from / to: { lat, lng } | null
@@ -10,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MAP_STYLE_URL, MAP_STYLE_DARK_URL, INDIA_VIEW, loadMapLibre } from 'transit-shared/mapConfig.js';
 import {
   applyNightGlassStyle, addNeonRouteLayers, animateFlow, injectNeonMapCss, createBusMarkerEl, updateBusMarkerEl,
-  glideMarker, createTrails, watchChips
+  glideMarker, startOnRoute, pathKey, createTrails, watchChips
 } from 'transit-shared/neonMap.js';
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -85,7 +86,10 @@ export default function PassengerMap({ buses = [], lines = [], stops = [], me = 
           stopFlow = animateFlow(m, [flow], { reduceMotion });
           stopChips = watchChips(m);
           trails.current = createTrails(m);
-          for (const [id, e] of markers.current) trails.current.push(id, e.marker.getLngLat().toArray(), e.color);
+          for (const [id, e] of markers.current) {
+            trails.current.push(id, e.marker.getLngLat().toArray(), e.color);
+            trails.current.head(id, e.marker.getLngLat().toArray(), e.onRoute);
+          }
           m.addLayer({ id: 'stops-circle', type: 'circle', source: 'stops', paint: {
             'circle-radius': ['case', ['get', 'big'], 7, 5], 'circle-color': '#0E1424',
             'circle-stroke-color': ['get', 'color'], 'circle-stroke-width': ['case', ['get', 'big'], 3, 2]
@@ -145,35 +149,49 @@ export default function PassengerMap({ buses = [], lines = [], stops = [], me = 
       let entry = markers.current.get(b.id);
       if (!entry) {
         let node;
+        let face;
         if (night) {
           node = createBusMarkerEl(() => onBusPress?.(entry.id));
         } else {
+          // MapLibre positions a marker with `transform` on its element, so the label's scale/transition
+          // live on an inner face; styling the element itself would knock the marker off its position.
           node = document.createElement('button');
-          node.style.cssText = 'font:800 14px "Anek Latin",system-ui,sans-serif;font-variant-numeric:tabular-nums;min-width:34px;height:26px;padding:0 6px;border-radius:6px;cursor:pointer;box-shadow:0 4px 10px -4px rgba(22,33,62,.5);transition:transform .18s cubic-bezier(.16,1,.3,1),opacity .2s;';
+          node.style.cssText = 'background:none;border:0;padding:0;cursor:pointer;';
+          face = document.createElement('span');
+          face.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font:800 14px "Anek Latin",system-ui,sans-serif;font-variant-numeric:tabular-nums;min-width:34px;height:26px;padding:0 6px;border-radius:6px;box-shadow:0 4px 10px -4px rgba(22,33,62,.5);transition:transform .18s cubic-bezier(.16,1,.3,1),opacity .2s;';
+          node.append(face);
           node.addEventListener('click', (e) => { e.stopPropagation(); onBusPress?.(entry.id); });
         }
-        entry = { id: b.id, node, marker: new maplibregl.Marker({ element: node }).setLngLat([b.lng, b.lat]).addTo(m), raf: 0 };
+        entry = { id: b.id, node, face, raf: 0, pos: [b.lng, b.lat], pathKey: pathKey(b.path) };
+        entry.marker = new maplibregl.Marker({ element: node }).setLngLat(startOnRoute(entry, entry.pos, b.path)).addTo(m);
         markers.current.set(b.id, entry);
-        if (night) trails.current?.push(b.id, [b.lng, b.lat], b.color);
+        if (night) {
+          trails.current?.push(b.id, entry.pos, b.color);
+          trails.current?.head(b.id, entry.marker.getLngLat().toArray(), entry.onRoute);
+        }
       }
-      const { node } = entry;
+      const { node, face } = entry;
       entry.color = b.color;
       if (night) {
         updateBusMarkerEl(node, { color: b.color, label: b.label, selected: b.selected, dim: b.dim, chip: b.chip });
       } else {
-        node.textContent = b.label;
-        node.style.background = '#16213E';
-        node.style.color = '#FBFBF8';
-        node.style.border = `2px solid ${b.stock || '#BFE6CF'}`;
-        node.style.transform = b.selected ? 'scale(1.18)' : 'scale(1)';
-        node.style.opacity = b.dim ? '0.35' : '1';
+        face.textContent = b.label;
+        face.style.background = '#16213E';
+        face.style.color = '#FBFBF8';
+        face.style.border = `2px solid ${b.stock || '#BFE6CF'}`;
+        face.style.transform = b.selected ? 'scale(1.18)' : 'scale(1)';
+        face.style.opacity = b.dim ? '0.35' : '1';
       }
       node.style.zIndex = b.selected ? '3' : '2';
+      // Compare with the last GPS fix (not the drawn position, which sits on the route line).
       const to = [b.lng, b.lat];
-      const fromPos = entry.marker.getLngLat().toArray();
-      if (to[0] !== fromPos[0] || to[1] !== fromPos[1]) {
+      const key = pathKey(b.path);
+      const pathChanged = key !== entry.pathKey; // e.g. the route geometry arrived after the bus
+      if (to[0] !== entry.pos[0] || to[1] !== entry.pos[1] || pathChanged) {
+        entry.pos = to;
+        entry.pathKey = key;
         if (night) trails.current?.push(b.id, to, b.color);
-        glideMarker(entry, to, { ms: GLIDE, reduceMotion, onFrame: night ? (p) => trails.current?.head(b.id, p) : undefined });
+        glideMarker(entry, to, { ms: GLIDE, reduceMotion, path: b.path, onFrame: night ? (p, onRoute) => trails.current?.head(b.id, p, onRoute) : undefined });
       }
     }
     for (const [id, entry] of markers.current) {
