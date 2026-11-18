@@ -4,6 +4,20 @@ import { haversine, buildPathIndex, projectOntoPath } from '../../shared/geo.js'
 import { initialWarningState, stepWarnings } from '../../shared/locationWarnings.js';
 import { departureDates, matchScheduledDeparture, nextScheduledArrival } from '../services/schedule.js';
 import { buildGraph, planWithGraph } from '../services/journeyPlanner.js';
+import { saveDocument, readDocument } from '../services/storage.js';
+
+// ---------- storage ----------
+
+test('broken CLOUDINARY_URL falls back to disk instead of failing the driver application', async () => {
+  process.env.CLOUDINARY_URL = 'cloudinary://bad';
+  try {
+    const key = await saveDocument({ buffer: Buffer.from([0xff, 0xd8, 0xff, 0xe0]), mime: 'image/jpeg' });
+    assert.match(key, /^local:/);
+    assert.equal((await readDocument(key)).mime, 'image/jpeg');
+  } finally {
+    delete process.env.CLOUDINARY_URL;
+  }
+});
 
 // ---------- geo ----------
 
