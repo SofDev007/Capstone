@@ -1,0 +1,69 @@
+# Render Blueprint: dashboard → New → Blueprint → pick this repo. Creates all four services (free plan).
+# Before the first deploy you need a MongoDB Atlas connection string (Render asks for MONGODB_URI).
+# After it: load Indore + create the admin from your PC (README "Run for real"), and add a cron-job.org
+# ping to https://citybus-api.onrender.com/api/health every 10 min so the free backend stays awake.
+#
+# URLs below assume these service names are free on Render. If Render adds a suffix to a name,
+# update CORS_ORIGINS / VITE_API_URL / EXPO_PUBLIC_API_URL in the dashboard to the real URLs.
+services:
+  - type: web
+    name: citybus-api
+    runtime: node
+    region: singapore
+    plan: free
+    branch: dev
+    buildCommand: cd backend && npm ci
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: MONGODB_URI
+        sync: false # asked for when the Blueprint is created
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TRANSIT_TIMEZONE
+        value: Asia/Kolkata
+      - key: CORS_ORIGINS
+        value: https://citybus-admin.onrender.com,https://citybus-passenger.onrender.com,https://citybus-driver.onrender.com
+      # Optional, add in the dashboard when you have them: ORS_API_KEY, CLOUDINARY_URL, GOOGLE_WEB_CLIENT_ID
+
+  - type: web
+    runtime: static
+    name: citybus-admin
+    branch: dev
+    buildCommand: cd admin-panel && npm ci && npm run build
+    staticPublishPath: admin-panel/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://citybus-api.onrender.com/api
+
+  - type: web
+    runtime: static
+    name: citybus-passenger
+    branch: dev
+    buildCommand: cd passenger-app && npm ci && npx expo export --platform web
+    staticPublishPath: passenger-app/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: EXPO_PUBLIC_API_URL
+        value: https://citybus-api.onrender.com/api
+
+  - type: web
+    runtime: static
+    name: citybus-driver
+    branch: dev
+    buildCommand: cd driver-app && npm ci && npx expo export --platform web
+    staticPublishPath: driver-app/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: EXPO_PUBLIC_API_URL
+        value: https://citybus-api.onrender.com/api
