@@ -33,14 +33,20 @@ export function parseImageDataUrl(dataUrl) {
 export async function saveDocument({ buffer, mime }) {
   const { ext } = TYPES[mime];
   if (useCloudinary()) {
-    const cld = await cloudinary();
-    const result = await new Promise((resolve, reject) => {
-      cld.uploader.upload_stream(
-        { type: 'authenticated', folder: 'driver-documents', resource_type: 'image' },
-        (error, res) => (error ? reject(error) : resolve(res))
-      ).end(buffer);
-    });
-    return `cld:${result.public_id}.${result.format}`;
+    try {
+      const cld = await cloudinary();
+      const result = await new Promise((resolve, reject) => {
+        cld.uploader.upload_stream(
+          { type: 'authenticated', folder: 'driver-documents', resource_type: 'image' },
+          (error, res) => (error ? reject(error) : resolve(res))
+        ).end(buffer);
+      });
+      return `cld:${result.public_id}.${result.format}`;
+    } catch (error) {
+      // A broken CLOUDINARY_URL (bad key/secret, wrong cloud name) used to fail every driver application with a 500.
+      // ponytail: disk fallback is lost on Render redeploys; fix CLOUDINARY_URL to keep documents durable.
+      console.error('Cloudinary upload failed, storing document on disk instead:', error?.message || error);
+    }
   }
   await fs.mkdir(UPLOAD_DIR, { recursive: true });
   const filename = `${crypto.randomUUID()}.${ext}`;
