@@ -212,7 +212,14 @@ export default function Home() {
   const fabRoom = snap !== 'full' && sheetTop - Math.max(topH, insets.top + 120) > 210;
 
   // ---------- Panic ----------
-  const nearbyBuses = position ? buses.filter((b) => haversine(position, b.location) < 300).sort((a, b) => haversine(position, a.location) - haversine(position, b.location)) : [];
+  // Every running bus for the "Which bus are you on?" picker, nearest first.
+  const panicBuses = position ? [...buses].sort((a, b) => haversine(position, a.location) - haversine(position, b.location)) : buses;
+  const nearbyBuses = position ? panicBuses.filter((b) => haversine(position, b.location) < 300) : [];
+  const [pickedBus, setPickedBus] = useState(null);
+  const pickBus = async (id) => { // id null = "I'm not on a bus"
+    setPickedBus(id || 'none');
+    api.patch(`/incidents/${panic.incident.id}/details`, { busId: id, deviceId: await getDeviceId() }).catch(() => {});
+  };
   const sendPanic = async () => {
     const deviceId = await getDeviceId();
     const where = position || from;
@@ -222,6 +229,7 @@ export default function Home() {
         deviceId,
         ...(nearbyBuses[0] && haversine(position, nearbyBuses[0].location) < 100 && { busId: nearbyBuses[0].busId })
       });
+      setPickedBus(incident.busId || null);
       setPanic({ incident, error: false, at: Date.now() });
     } catch {
       setPanic({ incident: null, error: true, at: 0 });
@@ -442,16 +450,17 @@ export default function Home() {
         fetchStatus={async (id) => (await api.get(`/incidents/${id}/status?deviceId=${encodeURIComponent(await getDeviceId())}`)).status}
         sendDetails={async (id, details) => api.patch(`/incidents/${id}/details`, { ...details, deviceId: await getDeviceId() })}
       >
-        {nearbyBuses.length > 0 && (
+        {panicBuses.length > 0 && (
           <View style={{ marginTop: 10 }}>
             <T variant="title">{t('panic.whichBus')}</T>
             <T variant="small" color={theme.inkSoft} style={{ marginBottom: 8 }}>{t('passenger.panicBusHint')}</T>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {nearbyBuses.slice(0, 4).map((b) => (
-                <Button key={b.busId} size="sm" variant="secondary" title={`Bus ${b.busNumber}`}
-                  onPress={async () => api.patch(`/incidents/${panic.incident.id}/details`, { busId: b.busId, deviceId: await getDeviceId() }).catch(() => {})} />
+              {panicBuses.map((b) => (
+                <Button key={b.busId} size="sm" variant={pickedBus === b.busId ? 'primary' : 'secondary'}
+                  title={b.routeNumber ? `Bus ${b.busNumber} · ${b.routeNumber}` : `Bus ${b.busNumber}`}
+                  onPress={() => pickBus(b.busId)} />
               ))}
-              <Button size="sm" variant="ghost" title={t('panic.notOnBus')} onPress={() => {}} />
+              <Button size="sm" variant={pickedBus === 'none' ? 'primary' : 'ghost'} title={t('panic.notOnBus')} onPress={() => pickBus(null)} />
             </View>
           </View>
         )}
