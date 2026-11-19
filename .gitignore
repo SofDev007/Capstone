@@ -16,3 +16,5 @@ build/
 *.mobileprovision
 # Uploaded driver documents (local-storage fallback)
 backend/uploads/
+# Claude Code worktrees (full copies of this repo made by Claude sessions)
+.claude/worktrees/
