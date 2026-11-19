@@ -79,7 +79,7 @@ router.post('/panic', optionalAuth, panicLimiter, [
   }
 
   const incident = await createIncident(data);
-  res.status(201).json({ id: incident._id, status: incident.status, createdAt: incident.createdAt });
+  res.status(201).json({ id: incident._id, status: incident.status, createdAt: incident.createdAt, busId: data.bus || null });
 });
 
 // Add the reason/note and live location updates to your own panic alert.
@@ -100,7 +100,11 @@ router.patch('/:id/details', optionalAuth, detailsLimiter, [
   const update = {};
   if (req.body.reason) update.reason = req.body.reason;
   if (req.body.note !== undefined) update.note = req.body.note;
-  if (req.body.busId && !incident.bus && await Bus.exists({ _id: req.body.busId })) update.bus = req.body.busId;
+  // Passengers pick (or correct, or clear with null) which bus they're on; a driver's bus comes from their trip.
+  if (incident.source === 'passenger' && req.body.busId !== undefined) {
+    if (req.body.busId === null) Object.assign(update, { bus: null, trip: null });
+    else if (await Bus.exists({ _id: req.body.busId })) Object.assign(update, { bus: req.body.busId, trip: liveTracker.getLiveBus(req.body.busId)?.tripId || null });
+  }
   const loc = req.body.location;
   const sharing = Date.now() - incident.createdAt.getTime() < TRAIL_WINDOW_MS && incident.status !== 'resolved';
   if (loc && sharing && incident.trail.length < TRAIL_MAX_POINTS) {

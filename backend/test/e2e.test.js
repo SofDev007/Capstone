@@ -262,6 +262,13 @@ test('full journey: trip, live tracking, incidents, applications, passengers', a
     assert.equal(detail.data.sharingLocation, true);
     const updated = await updP;
     assert.equal(updated.trail.length, 2);
+    assert.equal(res.data.busId, busId);
+    const clearedP = nextEvent(adminSocket, 'incident:update', (i) => i._id === res.data.id && !i.bus);
+    assert.equal((await call('PATCH', `/incidents/${res.data.id}/details`, { deviceId: 'device-abc-123', busId: null })).status, 200);
+    await clearedP; // "I'm not on a bus" clears the auto-attached bus
+    const repickedP = nextEvent(adminSocket, 'incident:update', (i) => i._id === res.data.id && i.bus?.busNumber === '101');
+    await call('PATCH', `/incidents/${res.data.id}/details`, { deviceId: 'device-abc-123', busId });
+    await repickedP;
     assert.equal((await call('PATCH', `/incidents/${res.data.id}/details`, { deviceId: 'someone-else-999', reason: 'other' })).status, 404);
     assert.equal((await call('POST', '/incidents/panic', { location: STOP.sec22 })).status, 400, 'anonymous needs a deviceId');
   });
