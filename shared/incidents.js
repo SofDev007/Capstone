@@ -3,6 +3,7 @@
 
 export const INCIDENT_TYPES = {
   panic: 'Panic button',
+  breakdown: 'Bus breakdown',
   'location-off': 'Driver location off',
   'off-route': 'Bus off route',
   'signal-lost': 'Signal lost',

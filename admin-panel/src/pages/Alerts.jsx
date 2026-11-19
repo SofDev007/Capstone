@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
-import { Phone, BellRing, Check } from 'lucide-react';
+import { Phone, BellRing, Check, Wrench } from 'lucide-react';
 import { reasonLabel, INCIDENT_TYPES, EMERGENCY_NUMBER } from '@shared/incidents.js';
+import { neon } from '@shared/theme/tokens.js';
 import { incidentAPI, errorMessage } from '@/lib/api';
 import { useRealtime, useRealtimeEvents, incidentTitle, incidentSubtitle } from '@/lib/realtime';
 import MapView from '@/components/MapView';
@@ -120,6 +121,7 @@ export default function Alerts() {
   const [params, setParams] = useSearchParams();
   const selectedId = params.get('id');
   const [tab, setTab] = useState('active');
+  const [section, setSection] = useState('all'); // 'all' | 'breakdown'
   const [items, setItems] = useState(null);
   const [selected, setSelected] = useState(null);
   const [notifyPermission, setNotifyPermission] = useState(() => ('Notification' in window ? Notification.permission : 'unsupported'));
@@ -143,10 +145,14 @@ export default function Alerts() {
     if (!selectedId && items?.length && tab === 'active') setParams({ id: items[0]._id }, { replace: true });
   }, [items, selectedId, tab, setParams]);
 
-  const sorted = useMemo(() => (items || []).slice().sort((a, b) =>
-    (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) ||
-    (a.type === 'panic' ? 0 : 1) - (b.type === 'panic' ? 0 : 1) ||
-    new Date(b.createdAt) - new Date(a.createdAt)), [items]);
+  const rank = (type) => (type === 'panic' ? 0 : type === 'breakdown' ? 1 : 2); // SOS, then breakdowns, then system flags
+  const breakdownCount = (items || []).filter((i) => i.type === 'breakdown').length;
+  const sorted = useMemo(() => (items || [])
+    .filter((i) => section === 'all' || i.type === section)
+    .sort((a, b) =>
+      (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) ||
+      rank(a.type) - rank(b.type) ||
+      new Date(b.createdAt) - new Date(a.createdAt)), [items, section]);
 
   const enableNotifications = async () => setNotifyPermission(await Notification.requestPermission());
 
@@ -155,7 +161,7 @@ export default function Alerts() {
       <section className="w-[420px] flex-none border-r border-rule flex flex-col" aria-label="Alerts">
         <div className="p-5 pb-3">
           <h1 className="text-[24px] font-bold">Alerts</h1>
-          <p className="text-ink-soft text-[14px]">SOS from drivers and passengers, plus location-off, off-route and signal-lost flags.</p>
+          <p className="text-ink-soft text-[14px]">SOS from drivers and passengers, bus breakdowns, plus location-off, off-route and signal-lost flags.</p>
           {notifyPermission === 'default' && (
             <button type="button" onClick={enableNotifications} className="btn btn-sm btn-secondary mt-3"><BellRing size={15} /> Alert me even when this tab is hidden</button>
           )}
@@ -163,6 +169,16 @@ export default function Alerts() {
             {[['active', 'Needs response'], ['resolved', 'Resolved']].map(([key, label]) => (
               <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)}
                 className={cn('h-9 px-4 rounded-sm text-[14px] font-semibold transition-colors', tab === key ? 'bg-counterfoil shadow-rest' : 'text-ink-soft hover:text-ink')}>{label}</button>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-3" role="group" aria-label="Section">
+            {[['all', 'All alerts', items?.length ?? 0], ['breakdown', 'Breakdowns', breakdownCount]].map(([key, label, n]) => (
+              <button key={key} type="button" aria-pressed={section === key} onClick={() => setSection(key)}
+                className={cn('h-8 px-3 rounded-full text-[13px] font-semibold border transition-colors flex items-center gap-1.5',
+                  section === key ? 'bg-counterfoil border-ink-faint text-ink' : 'border-rule text-ink-soft hover:text-ink')}>
+                {key === 'breakdown' && <Wrench size={14} />}{label}
+                <span className="tabular-nums text-ink-faint">{n}</span>
+              </button>
             ))}
           </div>
         </div>
@@ -179,7 +195,8 @@ export default function Alerts() {
                       className={cn('w-full text-left px-5 py-3.5 border-b border-rule flex gap-3 items-start transition-colors',
                         i._id === selectedId ? 'bg-counterfoil' : 'hover:bg-counterfoil/60',
                         i.status === 'open' && i.type === 'panic' && i._id !== selectedId && 'alert-lit')}>
-                      <span className={cn('mt-1.5 h-2.5 w-2.5 rounded-full flex-none', i.type === 'panic' ? 'bg-signal' : 'bg-buff-ink', i.status === 'resolved' && 'opacity-40')} />
+                      <span className={cn('mt-1.5 h-2.5 w-2.5 rounded-full flex-none', i.type === 'panic' ? 'bg-signal' : 'bg-buff-ink', i.status === 'resolved' && 'opacity-40')}
+                        style={i.type === 'breakdown' ? { backgroundColor: neon.amber } : undefined} />
                       <span className="flex-1 min-w-0">
                         <span className="flex items-center justify-between gap-2">
                           <span className="font-semibold truncate">{incidentTitle(i)}</span>

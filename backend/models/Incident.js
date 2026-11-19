@@ -8,7 +8,7 @@ const pointSchema = new mongoose.Schema({
 
 // Everything that needs the admin's attention: panic presses and system flags.
 const incidentSchema = new mongoose.Schema({
-  type: { type: String, enum: ['panic', 'location-off', 'off-route', 'signal-lost'], required: true },
+  type: { type: String, enum: ['panic', 'breakdown', 'location-off', 'off-route', 'signal-lost'], required: true },
   source: { type: String, enum: ['driver', 'passenger', 'system'], required: true },
   driver: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver', default: null },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

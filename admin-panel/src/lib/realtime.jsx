@@ -70,10 +70,8 @@ export function RealtimeProvider({ children }) {
     };
     socket.on('trip-started', tripChanged('trip-started'));
     socket.on('trip-ended', tripChanged('trip-ended'));
-    socket.on('breakdown-alert', (data) => {
-      toast(`Breakdown — Bus ${data.bus?.busNumber ?? ''}`, { description: data.reason });
-      emit('breakdown-alert', data);
-    });
+    // The toast comes from the breakdown's incident:new (with an Open button); this keeps maps/lists fresh.
+    socket.on('breakdown-alert', (data) => emit('breakdown-alert', data));
     socket.on('incident:new', (incident) => {
       refreshSummary();
       const emergency = incident.type === 'panic';
