@@ -118,6 +118,14 @@ router.post('/:id/breakdown', authenticateDriver, [body('reason').trim().notEmpt
   const bus = await Bus.findByIdAndUpdate(trip.bus, { status: 'breakdown' }, { new: true });
   await trip.save();
 
+  // An alert for the admin's Alerts page (acknowledge / resolve), with where the bus is.
+  const live = await liveTracker.getActiveTrip(req.user._id);
+  const last = bus?.currentLocation;
+  const at = live?.position || (last?.lat != null ? { lat: last.lat, lng: last.lng } : undefined);
+  await createIncident({
+    type: 'breakdown', source: 'driver', driver: trip.driver, bus: trip.bus, trip: trip._id, location: at, note: req.body.reason
+  });
+
   // Broadcast to public clients too — no driver details
   getIO()?.emit('breakdown-alert', {
     tripId: trip._id,

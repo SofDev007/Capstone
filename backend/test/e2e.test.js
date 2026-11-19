@@ -306,6 +306,19 @@ test('full journey: trip, live tracking, incidents, applications, passengers', a
     assert.ok(await models.Location.countDocuments({ 'meta.trip': new mongoose.Types.ObjectId(tripId) }) >= 4);
   });
 
+  await t.test('breakdown report: an alert for admins with the reason, bus and location; admin can resolve it', async () => {
+    const alertP = nextEvent(adminSocket, 'incident:new', (d) => d.type === 'breakdown');
+    const res = await call('POST', `/trips/${tripId}/breakdown`, { reason: 'Flat tyre near the market' }, driver);
+    assert.equal(res.status, 200, JSON.stringify(res.data));
+    const alert = await alertP;
+    assert.equal(alert.note, 'Flat tyre near the market');
+    assert.equal(alert.bus.busNumber, '101');
+    assert.ok(alert.location?.lat != null, 'carries where the bus is');
+    const list = await call('GET', '/incidents?status=active', null, admin);
+    assert.ok(list.data.items.some((i) => i._id === alert._id && i.type === 'breakdown'), 'listed on the Alerts page');
+    assert.equal((await call('POST', `/incidents/${alert._id}/resolve`, { resolution: 'handled' }, admin)).status, 200);
+  });
+
   await t.test('driver ends the trip: distance recorded, system incidents closed, stats updated', async () => {
     const res = await call('POST', `/trips/${tripId}/end`, { endLocation: STOP.sukhna }, driver);
     assert.equal(res.status, 200);
