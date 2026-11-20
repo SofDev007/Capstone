@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚌 City Bus Tracker
+# 🚌 Medi-radar
 
 **Real-time public bus tracking for Indian cities.**<br>
 Live bus positions straight from the drivers' phones, arrival times for every stop, journey planning with transfers,
